@@ -24,7 +24,7 @@ to one of the following: \code{"REML"} (Default), \code{"DL"}, \code{"HE"}, \cod
 for the fixed effects should be computed. By default (\code{test="knha"}), the method by Knapp and Hartung (2003) is used for adjusting test statistics 
 and confidence intervals.  Type '\code{?rma}' for more details.}
 
-\item{labels}{Vector of characters containing the labels for the studies}
+\item{labels}{Optional vector of characters containing the labels for the studies}
 
 \item{na.action}{A function which indicates what should happen when the data contain NAs. 
 Defaults to \code{"na.fail"}, other options are \code{"na.omit"}, \code{"na.exclude"} or \code{"na.pass"}.}

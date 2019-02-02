@@ -11,39 +11,39 @@ oecalc(OE, OE.se, OE.cilb, OE.ciub, OE.cilv, EO, EO.se, citl, citl.se, N,
 \arguments{
 \item{OE}{vector with the estimated ratio of total observed versus total expected events}
 
-\item{OE.se}{vector with the standard errors of the estimated O:E ratios}
+\item{OE.se}{Optional vector with the standard errors of the estimated O:E ratios}
 
-\item{OE.cilb}{vector to specify the lower limits of the confidence interval for \code{OE}.}
+\item{OE.cilb}{Optional vector to specify the lower limits of the confidence interval for \code{OE}.}
 
-\item{OE.ciub}{vector to specify the upper limits of the confidence interval for \code{OE}.}
+\item{OE.ciub}{Optional vector to specify the upper limits of the confidence interval for \code{OE}.}
 
-\item{OE.cilv}{vector to specify the levels of aformentioned confidence interval limits. 
+\item{OE.cilv}{Optional vector to specify the levels of aformentioned confidence interval limits. 
 (default: 0.95, which corresponds to the 95\% confidence interval).}
 
-\item{EO}{vector with the estimated ratio of total expected versus total observed events}
+\item{EO}{Optional vector with the estimated ratio of total expected versus total observed events}
 
-\item{EO.se}{vector with the standard errors of the estimated E:O ratios}
+\item{EO.se}{Optional vector with the standard errors of the estimated E:O ratios}
 
-\item{citl}{vector with the estimated calibration-in-the-large statistics}
+\item{citl}{Optional vector with the estimated calibration-in-the-large statistics}
 
-\item{citl.se}{vector with the standard error of the calibration-in-the-large statistics}
+\item{citl.se}{Optional vector with the standard error of the calibration-in-the-large statistics}
 
-\item{N}{vector to specify the sample/group sizes.}
+\item{N}{Optional vector to specify the sample/group sizes.}
 
-\item{O}{vector to specify the total number of observed events.}
+\item{O}{Optional vector to specify the total number of observed events.}
 
-\item{E}{vector to specify the total number of expected events}
+\item{E}{Optional vector to specify the total number of expected events}
 
-\item{Po}{vector to specify the (cumulative) observed event probabilities.}
+\item{Po}{Optional vector to specify the (cumulative) observed event probabilities.}
 
-\item{Po.se}{vector with the standard errors of \code{Po}.}
+\item{Po.se}{Optional vector with the standard errors of \code{Po}.}
 
-\item{Pe}{vector to specify the (cumulative) expected event probabilites
+\item{Pe}{Optional vector to specify the (cumulative) expected event probabilites
 (if specified, during time \code{t.val})}
 
-\item{data}{optional data frame containing the variables given to the arguments above.}
+\item{data}{Optional data frame containing the variables given to the arguments above.}
 
-\item{slab}{optional vector with labels for the studies.}
+\item{slab}{Optional vector with labels for the studies.}
 
 \item{add}{a non-negative number indicating the amount to add to zero counts. See `Details'}
 

@@ -18,11 +18,11 @@ valmeta(measure = "cstat", cstat, cstat.se, cstat.cilb, cstat.ciub,
 
 \item{cstat.se}{Optional vector with the standard error of the estimated c-statistics}
 
-\item{cstat.cilb}{vector to specify the lower limits of the confidence interval.}
+\item{cstat.cilb}{Optional vector to specify the lower limits of the confidence interval.}
 
-\item{cstat.ciub}{vector to specify the upper limits of the confidence interval.}
+\item{cstat.ciub}{Optional vector to specify the upper limits of the confidence interval.}
 
-\item{cstat.cilv}{vector to specify the levels of aformentioned confidence interval limits. 
+\item{cstat.cilv}{Optional vector to specify the levels of aformentioned confidence interval limits. 
 (default: 0.95, which corresponds to the 95\% confidence interval).}
 
 \item{sd.LP}{Optional vector with the standard deviation of the linear predictor (prognostic index)}
@@ -31,11 +31,11 @@ valmeta(measure = "cstat", cstat, cstat.se, cstat.cilb, cstat.ciub,
 
 \item{OE.se}{Optional vector with the standard errors of the estimated O:E ratios}
 
-\item{OE.cilb}{vector to specify the lower limits of the confidence interval for \code{OE}.}
+\item{OE.cilb}{Optional vector to specify the lower limits of the confidence interval for \code{OE}.}
 
-\item{OE.ciub}{vector to specify the upper limits of the confidence interval for \code{OE}.}
+\item{OE.ciub}{Optional vector to specify the upper limits of the confidence interval for \code{OE}.}
 
-\item{OE.cilv}{vector to specify the levels of aformentioned confidence interval limits. 
+\item{OE.cilv}{Optional vector to specify the levels of aformentioned confidence interval limits. 
 (default: 0.95, which corresponds to the 95\% confidence interval).}
 
 \item{citl}{Optional vector with the estimated calibration-in-the-large for each valiation}

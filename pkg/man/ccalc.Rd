@@ -11,32 +11,32 @@ ccalc(cstat, cstat.se, cstat.cilb, cstat.ciub, cstat.cilv, sd.LP, N, O, Po,
 \arguments{
 \item{cstat}{vector to specify the estimated c-statistics.}
 
-\item{cstat.se}{vector to specify the corresponding standard errors.}
+\item{cstat.se}{Optional vector to specify the corresponding standard errors.}
 
-\item{cstat.cilb}{vector to specify the lower limits of the confidence interval.}
+\item{cstat.cilb}{Optional vector to specify the lower limits of the confidence interval.}
 
-\item{cstat.ciub}{vector to specify the upper limits of the confidence interval.}
+\item{cstat.ciub}{Optional vector to specify the upper limits of the confidence interval.}
 
-\item{cstat.cilv}{vector to specify the levels of aformentioned confidence interval limits. 
+\item{cstat.cilv}{Optional vector to specify the levels of aformentioned confidence interval limits. 
 (default: 0.95, which corresponds to the 95\% confidence interval).}
 
-\item{sd.LP}{vector to specify the standard deviations of the linear predictor (prognostic index).}
+\item{sd.LP}{Optional vector to specify the standard deviations of the linear predictor (prognostic index).}
 
-\item{N}{vector to specify the sample/group sizes.}
+\item{N}{Optional vector to specify the sample/group sizes.}
 
-\item{O}{vector to specify the total number of observed events.}
+\item{O}{Optional vector to specify the total number of observed events.}
 
-\item{Po}{vector to specify the observed event probabilities.}
+\item{Po}{Optional vector to specify the observed event probabilities.}
 
-\item{data}{optional data frame containing the variables given to the arguments above.}
+\item{data}{Optional data frame containing the variables given to the arguments above.}
 
-\item{slab}{optional vector with labels for the studies.}
+\item{slab}{Optional vector with labels for the studies.}
 
-\item{subset}{optional vector indicating the subset of studies that should be used. This can be a logical vector or a numeric vector indicating the indices of the studies to include.}
+\item{subset}{Optional vector indicating the subset of studies that should be used. This can be a logical vector or a numeric vector indicating the indices of the studies to include.}
 
 \item{g}{a quoted string that is the function to transform estimates of the c-statistic; see the details below.}
 
-\item{level}{level for confidence interval, default \code{0.95}.}
+\item{level}{Optional numeric to specify the level for the confidence interval, default \code{0.95}.}
 
 \item{approx.se.method}{integer specifying which method should be used for estimating the standard error of the
 c-statistic (Newcombe, 2006). So far, only method \code{2} and method \code{4} (default) have been implemented.}
