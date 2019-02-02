@@ -99,7 +99,7 @@
 #' @export
 #' 
 ccalc <- function(cstat, cstat.se, cstat.cilb, cstat.ciub, cstat.cilv, sd.LP, N, O, Po, data, slab, subset,
-                  g=NULL, level=0.95, approx.se.method=4, ...) {
+                  g = NULL, level = 0.95, approx.se.method = 4, ...) {
   
   ### check if data argument has been specified
   if (missing(data))
@@ -292,6 +292,12 @@ ccalc <- function(cstat, cstat.se, cstat.cilb, cstat.ciub, cstat.cilv, sd.LP, N,
       slab <- make.unique(as.character(slab))
       rownames(ds) <- slab
     }
+    
+    # Add some attributes specifying the nature of the (untransformed) estimatess
+    attr(ds, 'estimand') <- "c-statistic"
+    attr(ds, 'theta_scale') <- g
+    attr(ds, 'plot_refline') <- 0.5
+    attr(ds, 'plot_lim') <- c(0,1)
     
     class(ds) <- c("mm_perf", class(ds))
     

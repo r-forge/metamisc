@@ -285,6 +285,12 @@ oecalc <- function(OE, OE.se, OE.cilb, OE.ciub, OE.cilv, EO, EO.se, citl, citl.s
     rownames(ds) <- slab
   }
   
+  # Add some attributes specifying the nature of the data
+  attr(ds, 'estimand') <- "Total O:E ratio"
+  attr(ds, 'theta_scale') <- g
+  attr(ds, 'plot_refline') <- 1
+  attr(ds, 'plot_lim') <- c(0,NA)
+  
   class(ds) <- c("mm_perf", class(ds))
   
   return(ds)

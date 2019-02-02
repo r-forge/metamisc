@@ -48,6 +48,12 @@ forest <- function(...)
 #' 
 #' @method forest default
 #' 
+#' @return An object of class \code{ggplot}
+#' 
+#' @import metafor
+#' @import ggplot2
+#' @importFrom stats reorder
+#' 
 #' @export
 # This could also be named forest.numeric
 forest.default <- function (theta, 

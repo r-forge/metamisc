@@ -176,7 +176,7 @@
 #'              hp.tau.df=3,            # Degrees of freedom for 'hp.tau.dist'
 #'              hp.tau.max=10)          # Maximum value for the between-study standard deviation
 #' fit3 <- valmeta(measure="OE", O=n.events, E=e.events, N=n, data=EuroSCORE.new,
-#'         method="BAYES", slab=Study, pars=pars, ret.fit = T))
+#'         method="BAYES", slab=Study, pars=pars, ret.fit = T)
 #' plot(fit3)
 #' print(fit3$fit$model) # Inspect the JAGS model
 #' print(fit3$fit$data)  # Inspect the JAGS data
@@ -395,14 +395,19 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
     }
 
     
-    ds <- ccalc(cstat=cstat, 
-                cstat.se=cstat.se, 
-                cstat.cilb=cstat.cilb,
-                cstat.ciub=cstat.ciub,
-                cstat.cilv=cstat.cilv,
-                sd.LP=sd.LP, 
-                N=N, O=O, Po=Po, slab=slab, g=g, level=pars.default$level, 
-                approx.se.method=pars.default$method.restore.c.se) 
+    ds <- ccalc(cstat = cstat, 
+                cstat.se = cstat.se, 
+                cstat.cilb = cstat.cilb,
+                cstat.ciub = cstat.ciub,
+                cstat.cilv = cstat.cilv,
+                sd.LP = sd.LP, 
+                N = N, 
+                O = O, 
+                Po = Po, 
+                slab = slab, 
+                g = g, 
+                level = pars.default$level, 
+                approx.se.method = pars.default$method.restore.c.se) 
     
     ## Assign study labels
     out$slab <- rownames(ds)
@@ -792,12 +797,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
 #' @method print valmeta
 #' @export
 print.valmeta <- function(x, ...) {
-  if (x$measure=="cstat") {
-    text.stat <- "c-statistic"
-  } else if (x$measure=="OE") {
-    text.stat <- "O:E ratio"
-  }
-  
+  text.stat <- attr(x$data,'estimand')
   text.model <- if (x$method=="FE") "Fixed" else "Random"
   text.ci <- if(x$method=="BAYES") "credibility" else "confidence"
   text.pi <- if(x$method=="BAYES") "" else "(approximate)"
@@ -820,8 +820,6 @@ print.valmeta <- function(x, ...) {
 #' Function to create forest plots for objects of class \code{"valmeta"}.
 #' 
 #' @param x An object of class \code{"valmeta"}
-#' @param sort By default, studies are ordered by ascending effect size (\code{sort="asc"}). For study ordering by descending
-#' effect size, choose \code{sort="desc"}. For any other value, study ordering is ignored.
 #' @param \ldots Additional arguments which are passed to \link{forest}.
 #' 
 #' @details The forest plot shows the performance estimates of each validation with corresponding confidence 
@@ -848,20 +846,18 @@ print.valmeta <- function(x, ...) {
 #'             
 #' @author Thomas Debray <thomas.debray@gmail.com>
 #' 
-#' @import metafor
-#' @import ggplot2
-#' @importFrom stats reorder
 #' @return An object of class \code{ggplot}
 #' 
 #' @method plot valmeta
 #' @export
-plot.valmeta <- function(x, sort="asc", ...) {
+plot.valmeta <- function(x,  ...) {
   k <- dim(x$data)[1]
   yi.slab <- c(as.character(x$slab))
   yi <- c(x$data[,"theta"])
   ci.lb <- c(x$data[,"theta.cilb"])
   ci.ub <- c(x$data[,"theta.ciub"])
   
+  # Back-transform the raw data
   if (x$model=="normal/logit") {
     yi <- sapply(yi, inv.logit)
     ci.lb <- sapply(ci.lb, inv.logit)
@@ -874,33 +870,19 @@ plot.valmeta <- function(x, sort="asc", ...) {
   
   yi.ci <- cbind(ci.lb, ci.ub)
   
-  if (x$measure=="cstat") {
-    #make sure to load plot_utils file and ggplot package when testing
-      forest(theta=yi, 
-             theta.ci.lb=yi.ci[,"ci.lb"], 
-             theta.ci.ub=yi.ci[,"ci.ub"], 
-             theta.slab=yi.slab, 
-           theta.summary=x$est, 
-           theta.summary.ci.lb=x$ci.lb,
-           theta.summary.ci.ub=x$ci.ub, 
-           theta.summary.pi.lb=x$pi.lb,
-           theta.summary.pi.ub=x$pi.ub,
-           xlim=c(0,1),
-           refline=0.5, xlab="c-statistic", sort=sort, ...)
-  } else if (x$measure=="OE") {
-    #metamisc::
-      forest(theta=yi, 
-                     theta.ci.lb=yi.ci[,"ci.lb"], 
-                     theta.ci.ub=yi.ci[,"ci.ub"], 
-                     theta.slab=yi.slab, 
-           theta.summary=x$est, 
-           theta.summary.ci.lb=x$ci.lb,
-           theta.summary.ci.ub=x$ci.ub, 
-           theta.summary.pi.lb=x$pi.lb,
-           theta.summary.pi.ub=x$pi.ub,
-           xlim=c(0,NA),
-           refline=1, xlab="Total O:E ratio", sort=sort, ...)
-  }
+  forest(theta = yi, 
+         theta.ci.lb = yi.ci[,"ci.lb"], 
+         theta.ci.ub = yi.ci[,"ci.ub"], 
+         theta.slab = yi.slab, 
+         theta.summary = x$est, 
+         theta.summary.ci.lb = x$ci.lb,
+         theta.summary.ci.ub = x$ci.ub, 
+         theta.summary.pi.lb = x$pi.lb,
+         theta.summary.pi.ub = x$pi.ub,
+         xlim = attr(x$data,'plot_lim'),
+         refline = attr(x$data,'plot_refline'), 
+         xlab = attr(x$data,'estimand'),  
+         ...)
 }
 
 .initiateDefaultPars <- function(pars) {

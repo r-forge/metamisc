@@ -204,7 +204,7 @@ pars <- list(hp.tau.dist="dhalft",   # Prior for the between-study standard devi
              hp.tau.df=3,            # Degrees of freedom for 'hp.tau.dist'
              hp.tau.max=10)          # Maximum value for the between-study standard deviation
 fit3 <- valmeta(measure="OE", O=n.events, E=e.events, N=n, data=EuroSCORE.new,
-        method="BAYES", slab=Study, pars=pars, ret.fit = T))
+        method="BAYES", slab=Study, pars=pars, ret.fit = T)
 plot(fit3)
 print(fit3$fit$model) # Inspect the JAGS model
 print(fit3$fit$data)  # Inspect the JAGS data

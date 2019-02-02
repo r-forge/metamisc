@@ -52,6 +52,9 @@ See \link[ggplot2]{ggtheme} for more information.}
 
 \item{\dots}{Additional arguments, which are currently ignored.}
 }
+\value{
+An object of class \code{ggplot}
+}
 \description{
 Generate a forest plot by specifying the various effect sizes, confidence intervals and summary estimate.
 }
