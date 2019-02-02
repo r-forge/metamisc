@@ -35,7 +35,7 @@ forest <- function(...)
 #' @param sort By default, studies are sorted by ascending effect size (\code{sort="asc"}). Set to \code{"desc"} for 
 #' sorting in reverse order, or any other value to ignore sorting.
 #' @param theme Theme to generate the forest plot. By default, the classic dark-on-light ggplot2 theme is used. 
-#' See \link[ggplot2]{theme_bw} for more information.
+#' See \link[ggplot2]{ggtheme} for more information.
 #' @param predint.linetype The linetype of the prediction interval
 #' @param xlim The \code{x} limits \code{(x1, x2)} of the forest plot
 #' @param xlab Optional character string specifying the X label

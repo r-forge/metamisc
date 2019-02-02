@@ -36,7 +36,7 @@
 sorting in reverse order, or any other value to ignore sorting.}
 
 \item{theme}{Theme to generate the forest plot. By default, the classic dark-on-light ggplot2 theme is used. 
-See \link[ggplot2]{theme_bw} for more information.}
+See \link[ggplot2]{ggtheme} for more information.}
 
 \item{predint.linetype}{The linetype of the prediction interval}
 
