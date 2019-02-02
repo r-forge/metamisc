@@ -222,6 +222,14 @@ forest.default <- function (theta,
 #' @examples 
 #' data(EuroSCORE)
 #' 
+#' # Calculate the c-statistic and its standard error
+#' est1 <- ccalc(cstat = c.index, cstat.se = se.c.index, cstat.cilb = c.index.95CIl, 
+#'               cstat.ciub = c.index.95CIu, N = n, O = n.events, data = EuroSCORE, slab = Study)
+#' plot(est1)
+#' 
+#' # Calculate the total O:E ratio and its standard error
+#' est2 <- oecalc(O = n.events, E = e.events, N = n, data = EuroSCORE, slab = Study)
+#' plot(est2)
 #' 
 #' @keywords forest
 #'             
@@ -232,7 +240,7 @@ forest.default <- function (theta,
 #' @method plot mm_perf
 #' @export
 plot.mm_perf <- function(x, ...) {
-  forest(theta = x$theta, theta.ci.lb = x$theta.cilb, theta.ci.ub = x$theta.ciub, theta.slab = rownames(x))
+  forest(theta = x$theta, theta.ci.lb = x$theta.cilb, theta.ci.ub = x$theta.ciub, theta.slab = rownames(x), ...)
 }
 
 # Multiple plot function
