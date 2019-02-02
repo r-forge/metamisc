@@ -1,5 +1,5 @@
 # Adapted from R package 'car' to avoid package loading issues in R-forge
-deltaMethod <- function (object, g, vcov., func = g, constants, level=0.95, ...) {
+deltaMethod <- function (object, g, vcov., func = g, constants, level = 0.95, ...) {
   if (!is.character(g)) 
     stop("The argument 'g' must be a character string")
   
@@ -61,10 +61,10 @@ hadamard.prod <- function (x, y)
   return(Xmat * Ymat)
 }
 
-calcPredInt <- function (x, sigma2, tau2, k, level=0.95) {
+calcPredInt <- function (x, sigma2, tau2, k, level = 0.95) {
   pi.lb <- x + qt((1-level)/2, df=(k-2))*sqrt(tau2+sigma2)
   pi.ub <- x + qt((1+level)/2, df=(k-2))*sqrt(tau2+sigma2)
-  out <- list(lower=as.numeric(pi.lb), upper=as.numeric(pi.ub))
+  out <- list(lower = as.numeric(pi.lb), upper = as.numeric(pi.ub))
   return(out)
 }
 

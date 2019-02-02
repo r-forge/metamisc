@@ -54,7 +54,7 @@ oecalc(OE, OE.se, OE.cilb, OE.ciub, OE.cilv, EO, EO.se, citl, citl.se, N,
 \item{\ldots}{Additional arguments.}
 }
 \value{
-An array with the following columns:
+An object of class c("mm_perf","data.frame") with the following columns:
 \describe{
  \item{"theta"}{The (transformed) O:E ratio. }
  \item{"theta.se"}{Standard errors of the (transformed) O:E ratio.}
@@ -75,10 +75,15 @@ corresponding sampling variance.
 data(EuroSCORE)
 
 # Calculate the total O:E ratio and its standard error
-oecalc(O=n.events, E=e.events, N=n, data=EuroSCORE, slab=Study)
+est1 <- oecalc(O = n.events, E = e.events, N = n, data = EuroSCORE, slab = Study)
+est1
 
 # Calculate the log of the total O:E ratio and its standard error
-oecalc(O=n.events, E=e.events, N=n, data=EuroSCORE, slab=Study, g="log(OE)")
+est2 <- oecalc(O = n.events, E = e.events, N = n, data = EuroSCORE, slab = Study, g = "log(OE)")
+est2
+
+# Display the results of all studies in a forest plot
+plot(est1)
 
 }
 \references{

@@ -74,7 +74,7 @@ forest.default <- function (theta,
   if (missing(theta.slab)) stop("Study labels are missing!")
   
   num.studies <- unique(c(length(theta), length(theta.ci.lb), length(theta.ci.ub), length(theta.slab)))
-  if (length(num.studies)>1) stop(paste("Mismatch in data dimensions!"))
+  if (length(num.studies)>1) stop(paste("Too few studies for a forest plot!"))
   
   
   #Extract data
@@ -108,17 +108,17 @@ forest.default <- function (theta,
     
   
   
-  #Sort data
+  # Determine ordering
   if (sort=="asc") {
     i.index <- order(yi)
   } else if (sort=="desc") {
-    i.index <- order(yi, decreasing=TRUE)
+    i.index <- order(yi, decreasing = TRUE)
   } else {
     i.index <- 1:length(yi)
   }
   
   
-  # Add meta-analysis results
+  # Order the study results
   scat  <- rep(1, num.studies) #indicator variable for data points
   slab  <- slab[i.index]
   yi    <- yi[i.index]
@@ -183,21 +183,50 @@ forest.default <- function (theta,
     g3$pi.upper <- theta.summary.pi.ub
     g3$pi.lower <- theta.summary.pi.lb
     
-    # Prediction interval
+    # Add (approximate) prediction interval
     if (add.predint) {
       p <- p + with(g3, geom_errorbar(data=g3, aes(ymin = pi.lower, ymax = pi.upper, x=label.predint), 
                                       width = 0.5, size=1.0, linetype=predint.linetype))
     }
     
-    # Confidence interval
+    # Add confidence interval of the summary estimate
     p <- p + with(g2, geom_errorbar(data=g2, aes(ymin = ci.lower, ymax = ci.upper, x=label.summary), width = 0.5, size=1.0))
     
-    # Summary estimate
+    # Add summary estimate
     p <- p + with(g2, geom_point(data=g2, shape=23, size=3, fill="white"))
   }
   
 
   p
+}
+
+#' Forest Plots
+#' 
+#' Function to create forest plots for objects of class \code{"mm_perf"}.
+#' 
+#' @param x An object of class \code{"mm_perf"}
+#' @param \ldots Additional arguments which are passed to \link{forest}.
+#' 
+#' @details The forest plot shows the performance estimates of each study with corresponding confidence 
+#' intervals. 
+#' 
+#' @references 
+#' Lewis S, Clarke M. Forest plots: trying to see the wood and the trees. \emph{BMJ}. 2001; 322(7300):1479--80.
+#' 
+#' @examples 
+#' data(EuroSCORE)
+#' 
+#' 
+#' @keywords forest
+#'             
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' 
+#' @return An object of class \code{ggplot}
+#' 
+#' @method plot mm_perf
+#' @export
+plot.mm_perf <- function(x, ...) {
+  forest(theta = x$theta, theta.ci.lb = x$theta.cilb, theta.ci.ub = x$theta.ciub, theta.slab = rownames(x))
 }
 
 # Multiple plot function

@@ -62,7 +62,7 @@
 #' for survival data. \emph{Biom J}. 2015;57(4):592--613. 
 #' 
 #' 
-#' @return An array with the following columns:
+#' @return An object of class c("mm_perf","data.frame") with the following columns:
 #' \describe{
 ##'  \item{"theta"}{The (transformed) c-statistics. }
 ##'  \item{"theta.se"}{Standard errors of the (transformed) c-statistics.}
@@ -79,12 +79,18 @@
 #' data(EuroSCORE)
 #' 
 #' # Calculate the c-statistic and its standard error
-#' ccalc(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl, cstat.ciub=c.index.95CIu, 
-#'       N=n, O=n.events, data=EuroSCORE, slab=Study)
+#' est1 <- ccalc(cstat = c.index, cstat.se = se.c.index, cstat.cilb = c.index.95CIl, 
+#'               cstat.ciub = c.index.95CIu, N = n, O = n.events, data = EuroSCORE, slab = Study)
+#' est1
 #'   
 #' # Calculate the logit c-statistic and its standard error
-#' ccalc(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl, cstat.ciub=c.index.95CIu, 
-#'       N=n, O=n.events, data=EuroSCORE, slab=Study, g="log(cstat/(1-cstat))")
+#' est2 <- ccalc(cstat = c.index, cstat.se = se.c.index, cstat.cilb = c.index.95CIl, 
+#'               cstat.ciub = c.index.95CIu, N = n, O = n.events, data = EuroSCORE, slab = Study, 
+#'               g = "log(cstat/(1-cstat))")
+#' est2
+#'       
+#' # Display the results of all studies in a forest plot
+#' plot(est1)
 #'                                                             
 #' @keywords meta-analysis discrimination concordance statistic performance
 #' 
@@ -287,6 +293,7 @@ ccalc <- function(cstat, cstat.se, cstat.cilb, cstat.ciub, cstat.cilv, sd.LP, N,
       rownames(ds) <- slab
     }
     
+    class(ds) <- c("mm_perf", class(ds))
     
     return(ds)
 }

@@ -44,7 +44,7 @@ c-statistic (Newcombe, 2006). So far, only method \code{2} and method \code{4} (
 \item{\ldots}{Additional arguments.}
 }
 \value{
-An array with the following columns:
+An object of class c("mm_perf","data.frame") with the following columns:
 \describe{
  \item{"theta"}{The (transformed) c-statistics. }
  \item{"theta.se"}{Standard errors of the (transformed) c-statistics.}
@@ -86,12 +86,18 @@ proposed by Hanley and McNeil, as specified in \code{approx.se.method}.
 data(EuroSCORE)
 
 # Calculate the c-statistic and its standard error
-ccalc(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl, cstat.ciub=c.index.95CIu, 
-      N=n, O=n.events, data=EuroSCORE, slab=Study)
+est1 <- ccalc(cstat = c.index, cstat.se = se.c.index, cstat.cilb = c.index.95CIl, 
+              cstat.ciub = c.index.95CIu, N = n, O = n.events, data = EuroSCORE, slab = Study)
+est1
   
 # Calculate the logit c-statistic and its standard error
-ccalc(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl, cstat.ciub=c.index.95CIu, 
-      N=n, O=n.events, data=EuroSCORE, slab=Study, g="log(cstat/(1-cstat))")
+est2 <- ccalc(cstat = c.index, cstat.se = se.c.index, cstat.cilb = c.index.95CIl, 
+              cstat.ciub = c.index.95CIu, N = n, O = n.events, data = EuroSCORE, slab = Study, 
+              g = "log(cstat/(1-cstat))")
+est2
+      
+# Display the results of all studies in a forest plot
+plot(est1)
                                                             
 }
 \references{
