@@ -409,7 +409,8 @@ getPredictMethod <- function(fit, two.stage = TRUE, predFUN = NULL, ...) {
   if (!is.null(predFUN)) {
     if (is.function(predFUN)) {
       return(predFUN)
-    } else return(get(as.character(predFUN), mode = "function"))
+    } 
+    return(get(as.character(predFUN), mode = "function"))
   }
   
   # If two-stage, the fit is used only to extract the link function.
@@ -421,8 +422,11 @@ getPredictMethod <- function(fit, two.stage = TRUE, predFUN = NULL, ...) {
       return(predictGLM)
     stop("No prediction method has been implemented for this model type yet for two-stage
          meta-analysis. You may supply one with the predFUN argument.")
-  } else return(predict)
-  }
+  } 
+  
+  # Return default predict function if everything else fails
+  return(predict)
+}
 
 # Prediction function for two-stage metapred GLM objects
 # object glm model fit object
