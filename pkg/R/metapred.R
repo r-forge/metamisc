@@ -1,4 +1,8 @@
 # TODO 1: Thomas' ideas
+# 2019-2-2: It would be nice to store some default performance estimates resulting from IECV in a "mm_perf" object (as as done in
+#           'ccalc()' and 'oecalc'). It would then be easy to plot IECV results for these performance measures. 
+#           Some suggested measures are: calibration slope, calibration-in-the-large and c-statistic. These performance
+#           measures are fairly generic and should work for most glm-type models, including survival ones.
 # @Valentijn: perhaps better to combine param perfFUN, genFUN and selFUN into one parameter with 3 or 4 distinct options
 # @Valentijn: I suggest to omit intercept recalibration. The intercept issue can be addressed directly by specifying distinct 
 # error functions that do or do not account for mis-calibration in intercept term
