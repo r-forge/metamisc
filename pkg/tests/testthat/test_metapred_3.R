@@ -209,3 +209,47 @@ test_that("metapred S3 methods work.", {
 #   cat("\n")
 #   print(mp)
 # })
+sampleBinary <- function(n = 50, J = 1, b = rep(log(2), J), alpha = NULL, col.names = NULL ) {
+  J <- length(b)
+  if (is.null(alpha)) alpha <- -log(sqrt(prod(exp(b))))
+  if (is.null(col.names)) col.names <- c("Y", paste("X", 1:J, sep = ""))
+  coefficientss <- c(alpha, b)
+  x  <- cbind(1, matrix(rbinom(n * J, size = 1, prob = .5), nrow = n, ncol = J))
+  lp <- coefficientss %*% t(x)
+  p  <- metamisc:::inv.logit(lp)
+  y  <- stats::rbinom(length(lp), size = 1, prob = p)
+  
+  out <- data.frame(cbind(y,x[ , -1]))
+  colnames(out) <- col.names
+  out
+}
+
+td <- sampleBinary(n = 1000, J = 4)
+td$clus <- td$X2 + td$X3 + td$X4
+td$X2 <- td$X3 <- td$X4 <- NULL
+
+test_that("metapred estimates models accurately.", {
+  mp.urma <- metamisc:::metapred(data = td, strata = "clus", max.steps = 0, meta.method = "REML")
+  # mp.ufma <- metamisc:::metapred(data = td, strata = "X4", metaFUN = "ufma") # TBI
+  mp.mrma <- metamisc:::metapred(data = td, strata = "clus", metaFUN = "mrma", max.steps = 0)
+  gl <- glm(Y ~ X1, data = td)
+  
+  expect_true( abs(coef(mp.urma)[2] - coef(mp.mrma)[2])/ coef(mp.mrma)[2] < .01) # < 1% deviation
+  expect_true( abs(coef(mp.mrma)[2] - coef(gl)[2])/ coef(gl)[2] < .10) # < 10% deviation
+  
+  
+  stratified.glm <- function(s) {glm(Y ~ X1, data = td[td$clus %in% s, ])}
+  glm.1st.stage <- mapply(stratified.glm, s = sort(unique(td$clus)), SIMPLIFY = F)
+  cff.1st.stage <- sapply(glm.1st.stage, coef)
+  var.1st.stage <- sapply(glm.1st.stage, function(x){diag(vcov(x))})
+  glm.2nd.stage <- metafor::rma(yi = cff.1st.stage[2,],  vi = var.1st.stage[2,], method = "REML")
+  
+  # 2nd stage coefs:
+  expect_equal(glm.2nd.stage$beta[[1]], coef(mp.urma)[[2]]) # No deviation at all.
+  
+  # 1st stage coefs:
+  # No deviation at all.
+  mp.urma.1st.stage <- subset(mp.urma, "stratified")
+  expect_equal(as.data.frame(coef(mp.urma.1st.stage)), as.data.frame(t(cff.1st.stage)), check.attributes = FALSE) 
+})
+

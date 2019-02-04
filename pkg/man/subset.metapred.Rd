@@ -5,18 +5,24 @@
 \title{Subsetting metapred fits}
 \usage{
 \method{subset}{metapred}(x, select = "cv", step = NULL,
-  model = NULL, ...)
+  model = NULL, stratum = NULL, add = TRUE, ...)
 }
 \arguments{
 \item{x}{metapred object}
 
-\item{select}{Which type of model to select: "cv" (default) or "global"}
+\item{select}{Which type of model to select: "cv" (default), "global", or (experimental) "stratified", 
+or "stratum".}
 
 \item{step}{Which step should be selected? Defaults to the best step. 
 numeric is converted to name of the step: 0 for an unchanged model, 1 for the first change...}
 
 \item{model}{Which model change should be selected? NULL (default, best change) or character name of variable
 or (integer) index of model change.}
+
+\item{stratum}{Experimental. Stratum to return if select = "stratum".}
+
+\item{add}{Logical. Add data, options and functions to the resulting object? Defaults to \code{TRUE}. 
+Experimental.}
 
 \item{...}{For compatibility only.}
 }

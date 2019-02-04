@@ -12,91 +12,6 @@ center <- function(x, center.in) {
   x
 }
 
-# Old. Works but choice of variables is limited and does not make a lot of sense.
-# # Centers data within studies / clusters
-# # Note that the center indicator is also centered. This is not intended, but can be worked around.
-# # data data.frame. data set.
-# # center.in numeric vector corresponding to cluster indices.
-# # center.1st logical. Should the 1st variable (response) be centered
-# # center.rest logical. Should the other variables (predictors) be centered?
-# centerData <- function(data, center.in, center.1st = FALSE, center.rest = FALSE) {
-#   if (!is.data.frame(data) && !is.matrix(data))
-#     stop("data should be a data.frame or matrix.")
-#   if (length(center.in) != nrow(data))
-#     stop("length(center.in) should match nrow(data).")
-#   if (isTRUE(center.1st))
-#     data[ , 1] <- center(data[ , 1], center.in)
-#   if (isTRUE(center.rest) && ncol(data) > 2)
-#     for (col in 2:ncol(data))
-#       data[ , col] <- center(data[ , col], center.in)
-#     data
-# }
-
-# Centers data within studies / clusters
-# # Note that the center indicator is also centered. This is not intended, but can be worked around. Sadly, this means
-# that a categorical cluster variable will also be tried to be centered, causing an error.
-# data data.frame. data set.
-# center.i numeric vector corresponding to cluster indicators.
-# center.which numeric or integer Which variables should be centered? Defaults to all except for the first column (assumed to be
-# the outcome)
-# centerData.old <- function(data, center.i, center.which = NULL) {
-#   if (!is.data.frame(data) && !is.matrix(data))
-#     stop("data should be a data.frame or matrix.")
-#   if (length(center.i) != nrow(data))
-#     stop("length(center.i) should match nrow(data).")
-#   if (is.null(center.which))
-#     center.which <- seq_len(ncol(data))[-1]
-#   if (isTRUE(any(!!center.which))) {
-#     if (all(center.which <= ncol(data)) && all(center.which > 0))
-#       for (col in center.which)
-#         data[ , col] <- center(data[ , col], center.i) 
-#       else stop("center.which should indicate (numeric values of) columns of data set that are to be centered. Use 0 or FALSE for none.")  
-#   }
-#   return(data)
-# }
-
-
-# Deprecated
-# Centers data within studies / clusters
-# data data.frame. data set.
-# cluster.var name of variable in data, vector corresponding to cluster indicators. 
-# Overrides cluster.vec If both are NULL, all are in the same cluster. 
-# cluster.vec vector of cluster indicators. Overridden by cluster.var. If both are NULL, all are in the same cluster.
-# center.which numeric or integer Which variables should be centered? Defaults to all numeric except for the first 
-# column (assumed to be the outcome)
-# centerData <- function(data, cluster.var = NULL, cluster.vec = NULL, center.which = NULL) {
-#   if (!is.data.frame(data) && !is.matrix(data))
-#     stop("data should be a data.frame or matrix.")
-#   
-#   if (!is.null(cluster.var)) {
-#     cluster.vec <- data[ , cluster.var]
-#     center.col <- which(colnames(data) == cluster.var)
-#   } else {
-#     center.col <- 0
-#     if (is.null(cluster.vec)) cluster.vec <- rep(1, nrow(data))
-#   }
-# 
-#   if (length(cluster.vec) != nrow(data))
-#     stop("length(cluster.vec) should match nrow(data).")
-#   
-#   # if (is.null(center.which)) # old, gives error when categorical variables are supplied
-#   #   center.which <- seq_len(ncol(data))[-1]
-#   
-#   if (is.null(center.which)) { # new, experimental
-#     center.which <- unlist(lapply(data, is.numeric))
-#     center.which[1] <- FALSE
-#     center.which <- which(center.which)
-#   }
-#   
-#   if (isTRUE(any(!!center.which))) {
-#     if (all(center.which <= ncol(data)) && all(center.which > 0)) {
-#       for (col in center.which)
-#         if (col != center.col) 
-#           data[ , col] <- center(x = data[ , col], center.in = cluster.vec) 
-#     } else stop("center.which should indicate (numeric values of) columns of data set that are to be centered. Use 0 or FALSE for none.")  
-#   }
-#   return(data)
-# }
 
 # Center covariates within clusters
 # data data.frame
@@ -111,31 +26,6 @@ centerCovs <- function(data, y.name, cluster.name) {
   
   data
 }
-
-
-# Deprecated
-# coerces data set to data.list
-# data data.frame. data set.
-# strata.i numeric. stratum indicators.
-# Returns data.list
-# asDataList <- function(data, strata.i) {
-#   data.list <- list()
-#   strata <- sort(unique(strata.i))
-#   for (i in 1:length(strata))
-#     data.list[[i]] <- data[strata.i == strata[i], ]
-#   names(data.list) <- strata
-#   data.list
-# }
-
-# Deprecated
-# gets only the relevant data from a data.list
-# data.list list of data sets
-# ccs numeric. covariate column selection
-# cl numeric. indices of clusters to be selected.
-# returns data.list.
-# getDataList <- function(data.list, ccs, cl) 
-#   lapply(data.list[cl], getData, predictors = ccs)
-
 
 # These functions are used for making various names. Any change should be made here, such that
 # these functions can also be used to retrieve objects from a list.
@@ -167,72 +57,8 @@ getclName <- function(st.u)
 getcvName <- function(f, type = NULL)
   paste(type, f, sep = " ")
 
-# Deprecated
-# getCovariateNames <- function(data.list, covariate.columns) {
-#   if (!length(covariate.columns))  return(NULL)
-#   if (!is.null(colnames(data.list[[1]]))) return(colnames(data.list[[1]])[covariate.columns])
-#   warning("Covariate names could not be found.")
-#   return(paste("X", covariate.columns - 1, sep = ""))
-# }
-# Deprecated
-# getModelName <- function(data.list, covariate.columns)
-#   if (is.null(name <- getCovariateNames(data.list, covariate.columns) ))
-#     return("intercept only") else return(toString(name))
-
 getStepName <- function(x)
   paste("s", x, sep = "")
-
-# Deprecated
-# getPredictorNames <- function(f, data)
-#   colnames(stats::model.frame.default(formula = f, data = data))[-1]
-
-# Deprecated
-# This one is mostly important for getting the intercept-only formula:
-# data data.frame
-# predictors indices of predictors
-# returns formula
-# getFormula <- function(data, predictors = NULL) {
-#   if (length(predictors) == 0 || identical(predictors, 0)) {
-#     f <- stats::formula(data)
-#     f[3] <- 1 # [3] is the right hand side.
-#   } else f <- stats::formula(data[ , c(1, predictors)])
-#   stats::as.formula(f)
-# }
-
-# Deprecated
-# Gets only the requested data, as well as the response variable.
-# data data.frame or matrix
-# pred.indices indexes of preditor columns
-# Returns data.frame.
-# getData <- function(data, pred.indices) {
-#   if (!is.data.frame(data) && !is.matrix(data))
-#     stop("data must be a data.frame or matrix.")
-#   sel <- c(1, pred.indices)
-#   d <- data.frame(data[ , sel])
-#   names(d) <- names(data)[sel]
-#   d
-# }
-
-# Deprecated
-# gets formula of for data set. Replacement of formula.data.frame, which returns bogus for
-# 1 column data.frames.
-# data data.frame
-# Returns formula.
-# getFullFormula <- function(data) {
-#   data <- as.data.frame(data)
-#   # if (!is.data.frame(data) && !is.matrix(data))
-#   #   stop("data must be a data.frame or matrix.")
-#   
-#   if (identical(ncol(data), 1L))
-#   {
-#     xnames <- names(data)[-1]
-#     if (identical(length(xnames), 0L))
-#       xnames <- "1"
-#     left <- paste(names(data)[1], "~")
-#     return(paste(left, xnames))
-#     
-#   } else return(stats::formula(data))
-# }
 
 getCoefs  <- function(fit, ...) {
   if (inherits(fit, "multinom"))
@@ -247,44 +73,6 @@ coefMultinom <- function(fit, ...)
 getVars   <- function(fit, ...) diag(vcov(fit))
 getCoVars <- function(fit, ...) vcov(fit)
 getSE     <- function(fit, ...) sqrt(getVars(fit))
-
-# Deprecated
-# Coerces l to one string
-# l list or vector of strings.
-# returns 1 string, character.
-# oneStr <- function(l, sep = "") {
-#   if (length(l) > 0) out <- l[[1]] else return("")
-#   
-#   if (length(l) > 1) {
-#     for (i in 2:length(l)) out <- paste(out, l[[i]], sep = sep)
-#   }
-#   return(out)
-# }
-
-# Deprecated
-# Necessary for making a formula from a model.frame.
-# f formula
-# returns: formula without backticks.
-# removeFormulaBackticks <- function(f)
-# {
-#   g <- gsub("`", "", f)
-#   h <- oneStr(list(g[[2]], " ~ ", g[[3]]), sep = "")
-#   stats::update.formula(f, h)
-# }
-
-# Deprecated
-# f formula
-# p.name character. name of predictor
-# Returns: formula
-# removePredictor <- function(f, p.name)
-#   stats::update.formula(f, paste(". ~ . -", p.name) )
-
-# Deprecated
-# f formula
-# p.name list or vector of character names of predictors
-# Returns: formula
-# removePredictors <- function(f, p.names)
-#   removePredictor(f, paste(oneStr(unlist(p.names), sep = " - "), sep = " - "))
 
 ### The following functions are for generating the folst.u for the cross-validation in metapred
 # st.u Numeric or character vector. Unique names of the strata / clusters.
@@ -418,7 +206,7 @@ getPredictMethod <- function(fit, two.stage = TRUE, predFUN = NULL, ...) {
   if (two.stage) {
     if (any(fit$stratified.fit[[1]]$stratum.class %in% c("logistf")) || inherits(fit, "logistf"))
       return(predictlogistf)
-    if (any(fit$stratified.fit[[1]]$stratum.class %in% c("glm", "lm") || inherits(fit, c("glm", "lm")))) 
+    if (any(fit$stratified.fit[[1]]$stratum.class %in% c("glm", "lm")) || inherits(fit, c("glm", "lm"))) 
       return(predictGLM)
     stop("No prediction method has been implemented for this model type yet for two-stage
          meta-analysis. You may supply one with the predFUN argument.")
@@ -496,16 +284,17 @@ logistfirth <- function(formula = attr(data, "formula"), data = sys.parent(), pl
 # coefficients data.frame or matrix, containing coef
 # variances data.frame or matrix, containing variances
 # method Method for meta-analysis.
+# vcov Ignored. For compatibility only, until a better solution is implemented.
 # ... Optional arguments for rma().
 #' @importFrom metafor rma
-urma <- function(coefficients, variances, method = "DL", ...)
+urma <- function(coefficients, variances, method = "DL", vcov = NULL, ...)
 {
   if (!(is.data.frame(coefficients) || is.matrix(coefficients)) || !(is.data.frame(variances) || is.matrix(variances)) )
     stop("coefficients and variances must both be a data.frame or matrix.")
   if (!identical(dim(coefficients), dim(variances)))
     stop("coefficients and variances must have the same dimensions.")
   
-  meta.b <- meta.se <- rep(NA, ncol(coefficients))
+  meta.b <- meta.se <- meta.tau2 <- rep(NA, ncol(coefficients))
   for (col in 1:ncol(coefficients)) {
     tryCatch(
       r <- metafor::rma(coefficients[ , col] , variances[ , col], method = method, ...),
@@ -516,12 +305,40 @@ urma <- function(coefficients, variances, method = "DL", ...)
     
     meta.b[col]  <- r$beta
     meta.se[col] <- r$se
+    meta.tau2[col] <- r$tau2
   }
   
   meta.v <- meta.se^2
   
-  names(meta.b) <- names(meta.v) <- names(meta.se) <- colnames(coefficients)
-  list(coefficients = meta.b, variances = meta.v, se = meta.se)
+  names(meta.b) <- names(meta.v) <- names(meta.se) <- names(meta.tau2) <- colnames(coefficients)
+  list(coefficients = meta.b, variances = meta.v, se = meta.se, tau2 = meta.tau2, tau = sqrt(meta.tau2))
+}
+
+# Multivariate Random Effects Meta-Analysis
+# coefficients data.frame or matrix, containing coef
+# vcov vcov as in vcov(stratified.fit)
+# variances IGNORED.
+# TBI: method Method for meta-analysis.
+# TBI: ... Optional arguments for mvmeta().
+# #' @importFrom mvmeta mvmeta
+mrma <- function(coefficients, vcov, variances, ...) {
+  # Test if optional 'mvmeta' package is installed
+  if (!requireNamespace("mvmeta", quietly = TRUE))
+    stop("The package 'mvmeta' is currently not installed.")
+
+  # fit
+  ma.fit <- mvmeta::mvmeta(as.matrix(coefficients), S = vcov) 
+
+  # Rename, as mvmeta changes the names.
+  vcov <- ma.fit$vcov
+  colnames(vcov) <- row.names(vcov) <- colnames(coefficients)
+
+  # Return
+  list(coefficients = ma.fit$coefficients[1,], # [1,] to coerce to vector with names.
+       variances = diag(vcov),
+       se = sqrt(diag(vcov)),
+       vcov = vcov,
+       psi = ma.fit$Psi)
 }
 
 

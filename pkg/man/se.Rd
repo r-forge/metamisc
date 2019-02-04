@@ -3,10 +3,14 @@
 \name{se}
 \alias{se}
 \alias{variances}
+\alias{tau}
+\alias{tau2}
 \title{Standard errors and variances}
 \usage{
 se(object, ...)
 variances(object, ...)
+tau(object, ...)
+tau2(object, ...)
 }
 \arguments{
 \item{object}{A model fit object}
@@ -15,7 +19,7 @@ variances(object, ...)
 }
 \value{
 For \code{se} the standard errors of \code{object}, and for 
-\code{variances} the variances.
+\code{variances} the variances. For \code{tau} the heterogeneity of the coefficients.
 }
 \description{
 Obtain standard errors or variances of a model fit

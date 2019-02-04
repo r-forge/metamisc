@@ -419,7 +419,8 @@ rema.perf <- function(object, method = "REML", ...) {
                 pi.ub = ma$pi.ub,
                 ci.lb = ma$ci.lb,
                 ci.ub = ma$ci.ub,
-                tau2  = ma$tau2))
+                tau2  = ma$tau2,
+                tau   = sqrt(ma$tau2)))
   } else if (object$class[[1]] == "auc") {
     ma <- valmeta(measure = "cstat", cstat = object[["estimate"]], 
                   cstat.cilb = object[,"ci.lb"], cstat.ciub = object[,"ci.ub"],
@@ -495,16 +496,18 @@ forest.metapred <- function(object, perfFUN = 1, step = NULL, method = "REML", m
 #                 object[["perf.names"]][[statistic]], ...)
 
 forest.mp.cv.val <- function(object, perfFUN = 1, method = "REML", ...) 
-  forest.perf(perf(object, stat = perfFUN, ...),
+  forest.perf(perf(object, perfFUN = perfFUN, ...),
               xlab = if (is.character(perfFUN)) perfFUN else
                 object$perf.names[[perfFUN]], method = method, ...)
 
 forest.perf <- function(object, method = "REML", ...) {
+  if (is.null(theta.slab <- list(...)$theta.slab))
+    theta.slab <- as.character(object$val.strata)
   ma <- rema.perf(object, method = method)
   fp <- metamisc::forest(theta       = object[["estimate"]],
                          theta.ci.lb = object$ci.lb,
                          theta.ci.ub = object$ci.ub,
-                         theta.slab  = as.character(object$val.strata),
+                         theta.slab  = theta.slab,
                          theta.summary       = ma$est,
                          theta.summary.ci.lb = ma$ci.lb,
                          theta.summary.ci.ub = ma$ci.ub,

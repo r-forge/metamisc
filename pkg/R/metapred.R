@@ -8,12 +8,6 @@
 # error functions that do or do not account for mis-calibration in intercept term
 
 # TODO 2: metapred objects
-########### CHANGE args for gv <- genfun(...) ##############################
-########### CHANGE args for gv <- genfun(...) ##############################
-########### CHANGE args for gv <- genfun(...) ##############################
-########### CHANGE args for gv <- genfun(...) ##############################
-########### CHANGE args for gv <- genfun(...) ##############################
-########### CHANGE args for gv <- genfun(...) ##############################
 # perfFUN = "cal.int" does not work for estFUN = "logistf", as logistf cannot take intercept only models
 #     possible fix: use logistfirth intstead, and fix intercept-only models for that function.
 
@@ -34,6 +28,9 @@
 #   a 'chain' of "changed" predictors to be added, thereby making the output clearer. 
 # change "changed" for global models as well.
 # If max.steps and scope = formula are supplied, no stopping reason is given.
+# add a new stratified.fit class, which contains mp.stratified.fit (or vice versa), such that subset(fit,
+# select = "stratified") can work as intended. Right now, mp.stratified.fit  is a list that may only contain
+# mp.stratum.fit objects.
 
 # TODO 3: General
 # add function: areTRUE. st.i == cl may otherwise lead to problems, if st.i has NA. Replaced with %in%. Now solved?
@@ -461,11 +458,15 @@ is.metapred <- function(object)
 #' @author Valentijn de Jong
 #' 
 #' @param x metapred object
-#' @param select Which type of model to select: "cv" (default) or "global"
+#' @param select Which type of model to select: "cv" (default), "global", or (experimental) "stratified", 
+#' or "stratum".
 #' @param step  Which step should be selected? Defaults to the best step. 
 #' numeric is converted to name of the step: 0 for an unchanged model, 1 for the first change... 
 #' @param model Which model change should be selected? NULL (default, best change) or character name of variable
 #' or (integer) index of model change. 
+#' @param stratum Experimental. Stratum to return if select = "stratum".
+#' @param add Logical. Add data, options and functions to the resulting object? Defaults to \code{TRUE}. 
+#' Experimental.
 #' @param ... For compatibility only.
 #' 
 #' @examples 
@@ -480,14 +481,11 @@ is.metapred <- function(object)
 #' @return An object of class \code{mp.cv} for select = "cv" and an object of class \code{mp.global} for select = "global". 
 #' In both cases, additional data is added to the resulting object, thereby making it suitable for further methods.
 #' @export
-subset.metapred <- function(x, select = "cv", step = NULL, model = NULL, ...) {
-  # Select
+subset.metapred <- function(x, select = "cv", step = NULL, model = NULL, stratum = NULL, add = TRUE, ...) {
+  # Global model
   if (identical(select, "global"))
     out <- x[["global.model"]]
-  else {
-    if (!identical(select, "cv"))
-      stop("select must equal 'cv' or 'global'.")
-    
+  else { # Same for cv, stratified and stratum:
     # Step
     if (is.null(step))
       step <- x$best.step
@@ -498,16 +496,27 @@ subset.metapred <- function(x, select = "cv", step = NULL, model = NULL, ...) {
     if (is.null(model))
       model <- x[["stepwise"]][[step]][["best.change"]]
     
-    out <- x[["stepwise"]][[step]][["cv"]][[model]]
-  }
+    # Select fit:
+    if (identical(select, "cv") || identical(select, "iecv"))                        # cv / iecv fit
+      out <- x[["stepwise"]][[step]][["cv"]][[model]]
+    else if (identical(select, "stratified") || identical(select, "stratified.fit")) # stratified fit
+      return(x[["stepwise"]][[step]][["cv"]][[model]][["stratified.fit"]])
+    else if (identical(select, "stratum") || identical(select, "strata"))            # stratum fit
+      out <- x[["stepwise"]][[step]][["cv"]][[model]][["stratified.fit"]][[stratum]]
+    else
+      stop("select must equal 'cv', 'global', 'stratified' or 'stratum'.")
+  }   
   
   # This is the real reason for why this function exists. To add this stuff to a mp.cv or mp.global object.
   # Normally those do not have this data, for memory/performance reasons.
-  out$data    <- x$data
-  out$strata  <- x$strata
-  out$folds   <- x$folds
-  out$FUN     <- x$FUN
-  out$options <- x$options
+  # In hindsight: This is actually a very useful function, as it makes finding a model much easier.
+  if (add) {
+    out$data    <- x$data
+    out$strata  <- x$strata
+    out$folds   <- x$folds
+    out$FUN     <- x$FUN
+    out$options <- x$options
+  }
 
   out
 }
@@ -1216,14 +1225,17 @@ mp.meta.fit <- function(stratified.fit, metaFUN = urma, meta.method = "DL") {
   out <- list()
   
   b <- coef.mp.stratified.fit(stratified.fit) # again i have to point it to the right method.
-  variances <- t(as.data.frame(lapply(stratified.fit, `[[`, "variances", drop = FALSE)))
+  # variances <- t(as.data.frame(lapply(stratified.fit, `[[`, "variances", drop = FALSE)))
+  variances <- variances.mp.stratified.fit(stratified.fit)
+  vcov <- vcov.mp.stratified.fit(stratified.fit)
   
-  meta <- metaFUN(coefficients = b, variances = variances, method = meta.method) 
+  meta <- metaFUN(coefficients = b, variances = variances, vcov = vcov, method = meta.method) 
   
   out[["coefficients"]] <- meta$coefficients
   out[["variances"]]    <- meta$variances
+  out[["tau"]]          <- meta$tau
   out[["nobs.strata"]]  <- sapply(stratified.fit, nobs)
-  out[["nobs"]] <- sum(out[["nobs.strata"]])
+  out[["nobs"]]         <- sum(out[["nobs.strata"]])
   
   class(out) <- "mp.meta.fit"
   out
@@ -1336,18 +1348,20 @@ family.default <- function(object, ...)
 #' 
 #' Obtain standard errors or variances of a model fit
 #' 
-#' @aliases variances se
+#' @aliases variances se tau tau2
 #' 
 #' @author Valentijn de Jong
 #' 
 #' @usage se(object, ...)
 #' variances(object, ...)
+#' tau(object, ...)
+#' tau2(object, ...)
 #' 
 #' @param object A model fit object
 #' @param ... other arguments
 #' 
 #' @return For \code{se} the standard errors of \code{object}, and for 
-#' \code{variances} the variances.
+#' \code{variances} the variances. For \code{tau} the heterogeneity of the coefficients.
 #' @export
 se <- function(object, ...)
   UseMethod("se", object)
@@ -1372,8 +1386,11 @@ variances.mp.perf <- function(object, ...)
   object$variances
 
 #' @export
-variances.metapred <- function(object, ...)
-  variances(object[["global.model"]])
+# variances.metapred <- function(object, ...)
+#   variances(object[["global.model"]])
+
+variances.metapred <- function(object, select = "global", ...)
+  variances(subset(object, select = select, ...))
 
 #' @export
 variances.mp.cv <- function(object, select = "cv", ...) 
@@ -1390,6 +1407,22 @@ variances.mp.cv.meta.fit <- function(object, ...)
 #' @export
 variances.auc <- function(object, ...) 
   pROC::var(object)
+
+#' @export
+tau2 <- function(object, ...)
+  tau(object, ...)^2
+
+#' @export
+tau <- function(object, ...)
+  UseMethod("tau")
+
+#' @export
+tau.metapred <- function(object, ...)
+  tau(subset(object, ...), ...)
+
+#' @export
+tau.default <- function(object, ...)
+  object$tau
 
 #' @author Valentijn de Jong
 #' @method ci   listofperf
@@ -1496,12 +1529,12 @@ gen <- function(object, ...)
 generalizability <- gen
 
 #' @export
-gen.metapred <- function(object, stat = 1, ...) 
-  gen(subset(object, ...), stat = stat, ...)
+gen.metapred <- function(object, genFUN = 1, ...) 
+  gen(subset(object, ...), genFUN = genFUN, ...)
 
 #' @export
-gen.mp.cv.val <- function(object, stat = 1, ...)
-  object$gen.all[[stat]]
+gen.mp.cv.val <- function(object, genFUN = 1, ...)
+  object$gen.all[[genFUN]]
 
 
 #' Performance estimates
@@ -1528,9 +1561,9 @@ perf <- function(object, ...)
 performance <- perf
 
 #' @export
-perf.metapred <- function(object, stat = 1, ...) 
-  perf(subset(object, ...), stat = stat, ...)
+perf.metapred <- function(object, perfFUN = 1, ...) 
+  perf(subset(object, ...), perfFUN = perfFUN, ...)
 
 #' @export
-perf.mp.cv.val <- function(object, stat = 1, ...)
-  object[["perf.all"]][[stat]]
+perf.mp.cv.val <- function(object, perfFUN = 1, ...)
+  object[["perf.all"]][[perfFUN]]
