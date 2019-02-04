@@ -321,26 +321,49 @@ urma <- function(coefficients, variances, method = "DL", vcov = NULL, ...)
 # TBI: method Method for meta-analysis.
 # TBI: ... Optional arguments for mvmeta().
 # #' @importFrom mvmeta mvmeta
+#mrma <- function(coefficients, vcov, variances, ...) {
+#  # Test if optional 'mvmeta' package is installed
+#  if (!requireNamespace("mvmeta", quietly = TRUE))
+#    stop("The package 'mvmeta' is currently not installed.")
+#
+#  # fit
+#  ma.fit <- mvmeta::mvmeta(as.matrix(coefficients), S = vcov) 
+#
+#  # Rename, as mvmeta changes the names.
+#  vcov <- ma.fit$vcov
+#  colnames(vcov) <- row.names(vcov) <- colnames(coefficients)
+#
+#  # Return
+#  list(coefficients = ma.fit$coefficients[1,], # [1,] to coerce to vector with names.
+#       variances = diag(vcov),
+#       se = sqrt(diag(vcov)),
+#       vcov = vcov,
+#       psi = ma.fit$Psi)
+#}
+
 mrma <- function(coefficients, vcov, variances, ...) {
-  # Test if optional 'mvmeta' package is installed
-  if (!requireNamespace("mvmeta", quietly = TRUE))
-    stop("The package 'mvmeta' is currently not installed.")
 
-  # fit
-  ma.fit <- mvmeta::mvmeta(as.matrix(coefficients), S = vcov) 
-
-  # Rename, as mvmeta changes the names.
-  vcov <- ma.fit$vcov
-  colnames(vcov) <- row.names(vcov) <- colnames(coefficients)
-
-  # Return
-  list(coefficients = ma.fit$coefficients[1,], # [1,] to coerce to vector with names.
-       variances = diag(vcov),
-       se = sqrt(diag(vcov)),
-       vcov = vcov,
-       psi = ma.fit$Psi)
+  tryCatch({
+    ma.fit <- rma.mv(yi = coefficients, V = vcov, ...)
+    
+    out <- list(coefficients = ma.fit$beta[,1], # [,1] to coerce to vector with names.
+                variances = diag(ma.fit$vb), # The estimated variances of the fixed effects
+                se = sqrt(diag(ma.fit$vb)), # The estimated SEs of the fixed effects
+                vcov = ma.fit$vb,
+                psi = ma.fit$tau2)
+    return(out);
+  },  error = function(e) {
+    out <- list(coefficients = rep(NA, length(coefficients)), # [1,] to coerce to vector with names.
+                variances = rep(NA, length(coefficients)), # The estimated variances of the fixed effects
+                se = rep(NA, length(coefficients)), # The estimated SEs of the fixed effects
+                vcov = array(NA, dim=c(length(coefficients), length(coefficients))),
+                psi = array(NA, dim=c(length(coefficients), length(coefficients))))
+    names(out$coefficients) <- names(out$variances) <- names(out$se) <- names(coefficients)
+    colnames(out$vcov) <- colnames(out$psi) <- rownames(out$vcov) <- rownames(out$psi) <- names(coefficients)
+    
+    return(out);
+  })
 }
-
 
 which.abs.min <- function(x) 
   which.min(abs(x))

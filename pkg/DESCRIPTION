@@ -2,7 +2,7 @@ Package: metamisc
 Type: Package
 Title: Diagnostic and Prognostic Meta-Analysis
 Version: 0.2.0
-Date: 2019-2-2
+Date: 2019-2-4
 Authors@R: c(person(given = "Thomas", family = "Debray", role = c("aut", "cre"), 
                     email = "thomas.debray@gmail.com", comment="http://orcid.org/0000-0002-1790-2719"), 
             person(given = "Valentijn", family = "de Jong", role = "aut", 
@@ -12,7 +12,7 @@ Description: Meta-analysis of diagnostic and prognostic modeling studies. Summar
     combine published prediction models. Develop new prediction models with data from multiple studies. 
 Imports: metafor (>= 2.0.0), mvtnorm,  lme4, plyr, methods, pROC, ggplot2
 Depends: R (>= 3.2.0), stats, graphics
-Suggests: runjags, rjags, logistf (>=	1.23), testthat (>= 1.0.2), mvmeta (>= 0.4.11)
+Suggests: runjags, rjags, logistf (>=	1.23), testthat (>= 1.0.2)
 License: GPL-3
 URL: http://r-forge.r-project.org/projects/metamisc/
 RoxygenNote: 6.1.1
