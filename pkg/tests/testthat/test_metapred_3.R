@@ -224,18 +224,24 @@ sampleBinary <- function(n = 50, J = 1, b = rep(log(2), J), alpha = NULL, col.na
   out
 }
 
-td <- sampleBinary(n = 1000, J = 4)
-td$clus <- td$X2 + td$X3 + td$X4
-td$X2 <- td$X3 <- td$X4 <- NULL
+
 
 test_that("metapred estimates models accurately.", {
-  mp.urma <- metamisc:::metapred(data = td, strata = "clus", max.steps = 0, meta.method = "REML")
-  # mp.ufma <- metamisc:::metapred(data = td, strata = "X4", metaFUN = "ufma") # TBI
-  mp.mrma <- metamisc:::metapred(data = td, strata = "clus", metaFUN = "mrma", max.steps = 0)
-  gl <- glm(Y ~ X1, data = td)
   
-  expect_true( abs(coef(mp.urma)[2] - coef(mp.mrma)[2])/ coef(mp.mrma)[2] < .01) # < 1% deviation
-  expect_true( abs(coef(mp.mrma)[2] - coef(gl)[2])/ coef(gl)[2] < .10) # < 10% deviation
+  set.seed(809303) # Somehow I cannot reproduce results if I use the seed defined at the top of the page (outside a testthat function)
+  
+  # Generate some data
+  td <- sampleBinary(n = 1000, J = 4)
+  td$clus <- td$X2 + td$X3 + td$X4
+  td$X2 <- td$X3 <- td$X4 <- NULL
+  
+  mp.urma <- metapred(data = td, strata = "clus", max.steps = 0, meta.method = "REML")
+  # mp.ufma <- metamisc:::metapred(data = td, strata = "X4", metaFUN = "ufma") # TBI
+  mp.mrma <- metapred(data = td, strata = "clus", metaFUN = "mrma", max.steps = 0)
+  mp.gl <- glm(Y ~ X1, data = td)
+  
+  expect_true( abs(coef(mp.urma)[2] - coef(mp.mrma)[2])/ coef(mp.mrma)[2] < .10) # < 10% deviation
+  expect_true( abs(coef(mp.mrma)[2] - coef(mp.gl)[2])/ coef(mp.gl)[2] < .10) # < 10% deviation
   
   
   stratified.glm <- function(s) {glm(Y ~ X1, data = td[td$clus %in% s, ])}

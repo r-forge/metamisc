@@ -1,5 +1,61 @@
 context("metapred 1. utility functions")
 
+test_that("Generating a block diagonal matrix works", {
+  m1 <- matrix(c(1,2,3,4), nrow=2, ncol=2)
+  m2 <- matrix(c(5,6,7,8), nrow=2, ncol=2)
+  m3 <- matrix(c(9,10,11,12), nrow=2, ncol=2)
+  
+  m_block <- blockMatrixDiagonal(m1, m2, m3)
+  m_eval <- matrix(c(1,2,0,0,0,0,3,4,0,0,0,0,0,0,5,6,0,0,0,0,7,8,0,0,0,0,0,0,9,10,0,0,0,0,11,12), nrow=6, ncol=6)
+  expect_identical(m_block, m_eval)
+  
+  m_list <- list(m1, m2, m3)
+  m_block2 <- blockMatrixDiagonal(m_list)
+  expect_identical(m_block2, m_eval)
+})
+
+test_that ("Multivariate meta-analysis works", {
+  
+  # Reconstruct berkey98 data from mvmeta
+  m1 <- matrix(c(0.0075, 0.0030, 0.0030, 0.0077), nrow = 2, ncol = 2)
+  m2 <- matrix(c(0.0057, 0.0009, 0.0009, 0.0008), nrow = 2, ncol = 2)
+  m3 <- matrix(c(0.0021, 0.0007, 0.0007, 0.0014), nrow = 2, ncol = 2)
+  m4 <- matrix(c(0.0029, 0.0009, 0.0009, 0.0015), nrow = 2, ncol = 2)
+  m5 <- matrix(c(0.0148, 0.0072, 0.0072, 0.0304), nrow = 2, ncol = 2)
+  m_full <- array(NA, dim=c(2,2,5))
+  m_full[,,1] <- m1
+  m_full[,,2] <- m2
+  m_full[,,3] <- m3
+  m_full[,,4] <- m4
+  m_full[,,5] <- m5
+  colnames(m_full) <- rownames(m_full) <- c("PD", "AL")
+  
+  y <- data.frame(PD = c(0.47, 0.20, 0.40, 0.26, 0.56), AL = c(-0.32, -0.60, -0.12, -0.31, -0.39))
+  
+  m_block <- blockMatrixDiagonal(m1, m2, m3, m4, m5)
+  m_dat <- data.frame(y = c(0.47, -0.32, 0.20, -0.60, 0.40, -0.12, 0.26, -0.31, 0.56, -0.39),
+                      group = c("PD", "AL", "PD", "AL", "PD", "AL", "PD", "AL", "PD", "AL"),
+                      study = c(1, 1, 2, 2, 3, 3, 4, 4, 5, 5))
+  
+  m_fit <- rma.mv(yi = y, V = m_block, mods = ~ -1+group, random = ~ group|study, data = m_dat)
+
+  expect_equal(as.numeric(coefficients(m_fit)["groupAL"]), -0.3379612, tolerance=0.0001)
+  expect_equal(as.numeric(coefficients(m_fit)["groupPD"]), 0.3635942, tolerance=0.0001)
+
+  # mvmeta returns 0.35 for PD and -0.34 for AL, which is based on REML
+  # mvmeta(cbind(PD,AL),S=berkey98[5:7],data=berkey98)
+  
+  
+  mrma_fit <- mrma(coefficients = y, vcov = m_full)
+  expect_identical(as.numeric(coefficients(m_fit)["groupAL"]), as.numeric(mrma_fit$coefficients["groupAL"]))
+  expect_identical(as.numeric(coefficients(m_fit)["groupPD"]), as.numeric(mrma_fit$coefficients["groupPD"]))
+  
+  # Test whether mrma works when we only have one dimension
+  y_uv <- y[,1]
+  vcov_uv <- c(m1[1,1], m2[1,1], m3[1,1], m4[1,1], m5[1,1])
+  mrma_fit_uv <- mrma(coefficients = y_uv, vcov = vcov_uv)
+  
+})
 
 ### Some stuff necessary for testing
 n <- 2

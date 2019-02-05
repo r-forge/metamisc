@@ -341,28 +341,67 @@ urma <- function(coefficients, variances, method = "DL", vcov = NULL, ...)
 #       psi = ma.fit$Psi)
 #}
 
+blockMatrixDiagonal <- function(...){  
+  matrixList <- list(...)
+  if(is.list(matrixList[[1]])) matrixList <- matrixList[[1]]
+  
+  dimensions<-sapply(matrixList,FUN=function(x) dim(x)[1])
+  finalDimension<-sum(dimensions)
+  finalMatrix<-matrix(0,nrow=finalDimension,ncol=finalDimension)
+  index<-1
+  for(k in 1:length(dimensions)){
+    finalMatrix[index:(index+dimensions[k]-1),index:(index+dimensions[k]-1)]<-matrixList[[k]]
+    index<-index+dimensions[k]
+  }
+  finalMatrix
+}
+
+
+## vcov is a 3-dimensional array, where [,,i] indicates the within-study covariance of study i
 mrma <- function(coefficients, vcov, variances, ...) {
 
-  tryCatch({
-    ma.fit <- rma.mv(yi = coefficients, V = vcov, ...)
-    
-    out <- list(coefficients = ma.fit$beta[,1], # [,1] to coerce to vector with names.
-                variances = diag(ma.fit$vb), # The estimated variances of the fixed effects
-                se = sqrt(diag(ma.fit$vb)), # The estimated SEs of the fixed effects
-                vcov = ma.fit$vb,
-                psi = ma.fit$tau2)
-    return(out);
-  },  error = function(e) {
-    out <- list(coefficients = rep(NA, length(coefficients)), # [1,] to coerce to vector with names.
-                variances = rep(NA, length(coefficients)), # The estimated variances of the fixed effects
-                se = rep(NA, length(coefficients)), # The estimated SEs of the fixed effects
-                vcov = array(NA, dim=c(length(coefficients), length(coefficients))),
-                psi = array(NA, dim=c(length(coefficients), length(coefficients))))
-    names(out$coefficients) <- names(out$variances) <- names(out$se) <- names(coefficients)
-    colnames(out$vcov) <- colnames(out$psi) <- rownames(out$vcov) <- rownames(out$psi) <- names(coefficients)
-    
-    return(out);
-  })
+  # Test if we are dealing with multivariate data
+  if (class(coefficients) == "numeric") {
+    coefficients <- data.frame(y=coefficients)
+  }
+  if (ncol(coefficients)==1) {
+    S = data.frame(S=vcov)
+    return(urma(coefficients=coefficients, variances=S,  ...))
+  }
+  
+  # In rma.mv, we need to supply a stacked version of all coefficients, together with a grouping variable
+  yi <- as.vector(t(coefficients))
+  
+  # Outcome indicator
+  group <- rep(NA, length(yi))
+  for (i in 1:ncol(coefficients)) {
+    group[seq(i,length(yi), by=ncol(coefficients))] <- colnames(coefficients)[i]
+  }
+  
+  # Study indicator
+  study <- rep(NA, length(yi))
+
+  for (i in 1:dim(vcov)[3]) {
+    study[(((i-1)*ncol(coefficients))+1):(i*ncol(coefficients))] <- rep(i,ncol(coefficients))
+  }
+  
+  rma_dat <- data.frame(yi=yi, group=group, study=study)
+  
+  # Build the block matrix of within-study variances
+  ws_var <- list()
+  for (i in 1:dim(vcov)[3]) {
+    ws_var[[i]] <- vcov[,,i]
+  }
+  S <- blockMatrixDiagonal(ws_var)
+
+  ma.fit <- rma.mv(yi = yi, V = S, mods = ~ -1+group, random = ~ group|study, data = rma_dat, method="REML")
+  
+  out <- list(coefficients = ma.fit$beta[,1], # [,1] to coerce to vector with names.
+              variances = diag(ma.fit$vb), # The estimated variances of the fixed effects
+              se = sqrt(diag(ma.fit$vb)), # The estimated SEs of the fixed effects
+              vcov = ma.fit$vb,
+              psi = ma.fit$tau2)
+  return(out);
 }
 
 which.abs.min <- function(x) 
