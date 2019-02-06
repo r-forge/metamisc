@@ -358,7 +358,8 @@ blockMatrixDiagonal <- function(...){
 
 
 ## vcov is a 3-dimensional array, where [,,i] indicates the within-study covariance of study i
-mrma <- function(coefficients, vcov, variances, ...) {
+mrma <- function(coefficients, vcov, variances,  ...) {
+  meta.method <- "REML" # Method for meta-analysis
 
   # Test if we are dealing with multivariate data
   if (class(coefficients) == "numeric") {
@@ -366,7 +367,7 @@ mrma <- function(coefficients, vcov, variances, ...) {
   }
   if (ncol(coefficients)==1) {
     S = data.frame(S=vcov)
-    return(urma(coefficients=coefficients, variances=S,  ...))
+    return(urma(coefficients = coefficients, variances = S, method = meta.method, ...))
   }
   
   # In rma.mv, we need to supply a stacked version of all coefficients, together with a grouping variable
@@ -377,6 +378,8 @@ mrma <- function(coefficients, vcov, variances, ...) {
   for (i in 1:ncol(coefficients)) {
     group[seq(i,length(yi), by=ncol(coefficients))] <- colnames(coefficients)[i]
   }
+  # specify order of the levels to ensure that the coefficient output is in the same order as their input
+  group <- factor(group, levels = colnames(coefficients)) 
   
   # Study indicator
   study <- rep(NA, length(yi))
@@ -385,7 +388,7 @@ mrma <- function(coefficients, vcov, variances, ...) {
     study[(((i-1)*ncol(coefficients))+1):(i*ncol(coefficients))] <- rep(i,ncol(coefficients))
   }
   
-  rma_dat <- data.frame(yi=yi, group=group, study=study)
+  rma_dat <- data.frame(yi = yi, group = group, study = study)
   
   # Build the block matrix of within-study variances
   ws_var <- list()
@@ -394,7 +397,10 @@ mrma <- function(coefficients, vcov, variances, ...) {
   }
   S <- blockMatrixDiagonal(ws_var)
 
-  ma.fit <- rma.mv(yi = yi, V = S, mods = ~ -1+group, random = ~ group|study, data = rma_dat, method="REML")
+  ma.fit <- rma.mv(yi = yi, V = S, mods = ~ -1+group, random = ~ group|study, data = rma_dat, 
+                   struct= "UN", method = meta.method)
+  
+  
   
   out <- list(coefficients = ma.fit$beta[,1], # [,1] to coerce to vector with names.
               variances = diag(ma.fit$vb), # The estimated variances of the fixed effects

@@ -37,18 +37,16 @@ test_that ("Multivariate meta-analysis works", {
                       group = c("PD", "AL", "PD", "AL", "PD", "AL", "PD", "AL", "PD", "AL"),
                       study = c(1, 1, 2, 2, 3, 3, 4, 4, 5, 5))
   
-  m_fit <- rma.mv(yi = y, V = m_block, mods = ~ -1+group, random = ~ group|study, data = m_dat)
+  m_fit <- rma.mv(yi = y, V = m_block, mods = ~ -1+group, random = ~ group|study, struct= "UN", data = m_dat)
 
-  expect_equal(as.numeric(coefficients(m_fit)["groupAL"]), -0.3379612, tolerance=0.0001)
-  expect_equal(as.numeric(coefficients(m_fit)["groupPD"]), 0.3635942, tolerance=0.0001)
-
-  # mvmeta returns 0.35 for PD and -0.34 for AL, which is based on REML
-  # mvmeta(cbind(PD,AL),S=berkey98[5:7],data=berkey98)
-  
-  
   mrma_fit <- mrma(coefficients = y, vcov = m_full)
   expect_identical(as.numeric(coefficients(m_fit)["groupAL"]), as.numeric(mrma_fit$coefficients["groupAL"]))
   expect_identical(as.numeric(coefficients(m_fit)["groupPD"]), as.numeric(mrma_fit$coefficients["groupPD"]))
+  
+  # Compare results with mvmeta
+  # mvmeta(cbind(PD,AL),S=berkey98[5:7],data=berkey98)
+  expect_equal(as.numeric(coefficients(m_fit)["groupAL"]), -0.3392152, tolerance = 0.0001)
+  expect_equal(as.numeric(coefficients(m_fit)["groupPD"]),  0.3534282, tolerance = 0.0001)
   
   # Test whether mrma works when we only have one dimension
   y_uv <- y[,1]
