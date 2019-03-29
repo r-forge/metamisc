@@ -293,7 +293,7 @@ urma <- function(coefficients, variances, method = "DL", vcov = NULL, ...)
     stop("coefficients and variances must both be a data.frame or matrix.")
   if (!identical(dim(coefficients), dim(variances)))
     stop("coefficients and variances must have the same dimensions.")
-  
+
   meta.b <- meta.se <- meta.tau2 <- rep(NA, ncol(coefficients))
   for (col in 1:ncol(coefficients)) {
     tryCatch(
@@ -302,17 +302,19 @@ urma <- function(coefficients, variances, method = "DL", vcov = NULL, ...)
         stop(paste("Error in univariate rma of variable:", names(coefficients)[col], ",as follows:", e))
         }
     )
-    
+
     meta.b[col]  <- r$beta
     meta.se[col] <- r$se
     meta.tau2[col] <- r$tau2
   }
-  
+
   meta.v <- meta.se^2
-  
+
   names(meta.b) <- names(meta.v) <- names(meta.se) <- names(meta.tau2) <- colnames(coefficients)
   list(coefficients = meta.b, variances = meta.v, se = meta.se, tau2 = meta.tau2, tau = sqrt(meta.tau2))
 }
+
+
 
 # Multivariate Random Effects Meta-Analysis
 # coefficients data.frame or matrix, containing coef
@@ -341,6 +343,8 @@ urma <- function(coefficients, variances, method = "DL", vcov = NULL, ...)
 #       psi = ma.fit$Psi)
 #}
 
+
+# What is this?
 blockMatrixDiagonal <- function(...){  
   matrixList <- list(...)
   if(is.list(matrixList[[1]])) matrixList <- matrixList[[1]]

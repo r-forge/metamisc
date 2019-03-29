@@ -311,12 +311,12 @@ fema <- function(object, ...) {
 }
 
 rema.beta <- rema.mean <- function(object, method = "REML", ...) 
-  rema.perf(object, method = method, ...)$est
+  ma.perf(object, method = method, ...)$est
 
 # valmeta does not produce tau!
 # so rema.tau cannot be used on auc!
 rema.tau <- function(object, method = "REML", ...)
-  rema.perf(object, method = method, ...)$tau # Note: Intentionally selects tau2 if only that one is available.
+  ma.perf(object, method = method, ...)$tau # Note: Intentionally selects tau2 if only that one is available.
 
 # pooled.var <- function(x, n, ...) {
 #   x <- unlist(x)
@@ -411,7 +411,7 @@ plot.listofperf <- function(x, pfn, ...) { # xlab tbi from perfFUN
 plot.mp.cv.val <- function(x, y, ...)
   plot.listofperf(x$perf.full, x$perf.name, ...)
 
-rema.perf <- function(object, method = "REML", ...) {
+ma.perf <- function(object, method = "REML", ...) {
   if (object$class[[1]] == "mp.perf" || object$class[[1]] == "recal") {
     ma <- uvmeta(r = object[["estimate"]], r.vi = object$var, method = method) # uvmeta uses a Student T distribution, in contrast to metafor
     return(list(est = ma$est,     
@@ -434,10 +434,40 @@ rema.perf <- function(object, method = "REML", ...) {
   stop("class not recognized")
 }
 
-rema.mp.cv.val <- function(object, method = "REML", ...)
-  rema.perf(object[["perf"]], method = method)
 
 
+#' Random effects meta-analysis
+#' 
+#' Meta-analysis of the performance or coefficients of a metapred object.
+#' Caution: it is still under development.
+#' 
+#' @author Valentijn de Jong
+#' 
+#' @param object A model fit object, such as \link{metapred} object.
+#' @param ... Other arguments passed to \link[metamisc]{metapred}, \link[metamisc]{valmeta} and \link[metamisc]{uvmeta}
+#' 
+#' @details Produces different object types depending on input.
+#' 
+#' @export
+ma <- function(object, ...)
+  UseMethod("ma")
+
+# object metapred object
+# method character. Estimation method for meta analsyis.
+# ... arguments passed to subset to select a model.
+#' @export
+ma.metapred<- function(object, select = "cv", method = "REML", ...)
+  ma(subset(object, select, ...), method = method, ...)
+
+#' Meta-analysis
+#' @export
+ma.mp.cv.val <- function(object, method = "REML", ...)
+  ma.perf(object[["perf"]], method = method, ...)
+
+#' Meta-analysis
+#' @export
+ma.mp.global <- function(object, method = "REML", ...)
+  metafor::rma(coef(object) , variances(object), method = method, ...)
 
 #' Forest plot of a metapred fit
 #' 
@@ -503,7 +533,7 @@ forest.mp.cv.val <- function(object, perfFUN = 1, method = "REML", ...)
 forest.perf <- function(object, method = "REML", ...) {
   if (is.null(theta.slab <- list(...)$theta.slab))
     theta.slab <- as.character(object$val.strata)
-  ma <- rema.perf(object, method = method)
+  ma <- ma.perf(object, method = method)
   fp <- metamisc::forest(theta       = object[["estimate"]],
                          theta.ci.lb = object$ci.lb,
                          theta.ci.ub = object$ci.ub,
