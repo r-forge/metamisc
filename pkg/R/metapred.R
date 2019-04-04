@@ -27,7 +27,6 @@
 # add the unchanged model to the next step's model list. Model comparison will be easier. Subsetting will be easier: this allows
 #   a 'chain' of "changed" predictors to be added, thereby making the output clearer. 
 # change "changed" for global models as well.
-# If max.steps and scope = formula are supplied, no stopping reason is given.
 # add a new stratified.fit class, which contains mp.stratified.fit (or vice versa), such that subset(fit,
 # select = "stratified") can work as intended. Right now, mp.stratified.fit  is a list that may only contain
 # mp.stratum.fit objects.
@@ -63,6 +62,7 @@
 #                   Currently, an error it thrown if setting dvt=NA in the example. This error traces back to the use 
 #                   of model.matrix, which calls the function model.frame() that fails.
 # Fixed by removing the outcome from the formula in the predict method.
+# If max.steps and scope = formula are supplied, no stopping reason is given. SHould be fixed now (3 april 2019)
 
 # TODO 6:
 
@@ -556,6 +556,7 @@ mp.fit <- function(formula, data, remaining.changes, st.i, st.u, folds, recal.in
                                      perfFUN = perfFUN, genFUN = genFUN, selFUN = selFUN, ...)
   steps[[getStepName(step.count)]][["step.count"]] <- step.count
   out[["best.step"]] <- getStepName(step.count)
+  out[["stop.reason"]] <- "no changes were requested."
   current.model <- mp.step.get.best(steps[[1]])
   current.model[["remaining.changes"]] <- remaining.changes
   gen.diff <- Inf # TBI
@@ -1011,7 +1012,8 @@ mp.cv.val <- function(cv.dev, data, st.i, folds, recal.int = FALSE, two.stage = 
                    
     # gv <- genfun(cv.dev[["perf"]], coef = coef(cv.dev[["stratified.fit"]]), coef.se = se(cv.dev[["stratified.fit"]]),
                  # title = paste("Model change: ~", cv.dev[["changed"]]), xlab = as.character(pfn), ...)
-    gen.all[[fun.id]] <- if (is.null(gv)) NaN else gv # As 'foo[[bar]] <- NULL' is not allowed
+    # As 'foo[[bar]] <- NULL' is not allowed # Also, the rest of the code does not expect a plot yet.
+    gen.all[[fun.id]] <- if (is.null(gv) || !is.numeric(gv) || !identical(length(gv), 1L)) NaN else gv 
   }
 
   names(gen.all) <- gen.names

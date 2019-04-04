@@ -1,5 +1,6 @@
 # TODO:
 # add transforms to fema
+# add c-stat (and others) compatibility to ma(...)
 
 ##############################                Performance / error functions                  ###############################
 # ### By convention, all performance measures:
@@ -234,11 +235,17 @@ mean.abs <- function(object, ...)
 # Measure 1: Coefficient of variation (=scaled sd)
 # In general sense, abs needs not be TRUE, but for metapred it should,
 # such that higher values are worse performance.
-coef.var <- function(x, abs = TRUE, ...) {
-  x <- unlist(x) 
-  cv <- sd(x)/mean(x)
+coef.var <- function(object, abs = TRUE, ...) {
+  object <- unlist(object) 
+  cv <- sd(object)/mean(object)
   if (isTRUE(abs)) abs(cv) else cv
 }
+
+# coef.var <- function(x, abs = TRUE, ...) {
+#   x <- unlist(x) 
+#   cv <- sd(x)/mean(x)
+#   if (isTRUE(abs)) abs(cv) else cv
+# }
 
 # var.x.mean.with.se <- function(x, abs = TRUE, ...) {
 #   x <- unlist(x) 
@@ -308,6 +315,18 @@ fema <- function(object, ...) {
   x <- object[["estimate"]]
   v <- object$var
   sum(unlist(x) / unlist(v)) / sum(1/unlist(v))
+}
+
+
+# lambda defines the influence of the mean of performance, vs heterogeneity thereof.
+# 1 = mean of performance only
+# 0 = heterogeneity only
+# 1/2 = equal portions of both.
+rema <- function(object, method = "REML", lambda = 1, ...) {
+  if (!is.numeric(lambda) || lambda < 0 || lambda > 1)
+    stop(c("lambda must be a numeric ranging from 0 to 1."),  "\n * lambda was ", paste0(lambda), ".")
+  MA <- ma.perf(object, method = method, ...)
+  lambda * MA$est + (1- lambda) *MA$tau
 }
 
 rema.beta <- rema.mean <- function(object, method = "REML", ...) 
@@ -435,36 +454,32 @@ ma.perf <- function(object, method = "REML", ...) {
 }
 
 
-
 #' Random effects meta-analysis
 #' 
 #' Meta-analysis of the performance or coefficients of a metapred object.
 #' Caution: it is still under development.
 #' 
 #' @author Valentijn de Jong
-#' 
+#'  
 #' @param object A model fit object, such as \link{metapred} object.
-#' @param ... Other arguments passed to \link[metamisc]{metapred}, \link[metamisc]{valmeta} and \link[metamisc]{uvmeta}
+#' @param method Character, method for meta-analysis passed to \link[metamisc]{valmeta} and \link[metamisc]{uvmeta}.
+#' Defaults to "REML".
+#' @param ... Other arguments passed to \link[metamisc]{metapred}, \link[metamisc]{valmeta} and \link[metamisc]{uvmeta}.
 #' 
 #' @details Produces different object types depending on input.
 #' 
 #' @export
-ma <- function(object, ...)
+ma <- function(object, method, ...)
   UseMethod("ma")
 
-# object metapred object
-# method character. Estimation method for meta analsyis.
-# ... arguments passed to subset to select a model.
 #' @export
-ma.metapred<- function(object, select = "cv", method = "REML", ...)
+ma.metapred<- function(object, method = "REML", select = "cv", ...)
   ma(subset(object, select, ...), method = method, ...)
 
-#' Meta-analysis
 #' @export
 ma.mp.cv.val <- function(object, method = "REML", ...)
   ma.perf(object[["perf"]], method = method, ...)
 
-#' Meta-analysis
 #' @export
 ma.mp.global <- function(object, method = "REML", ...)
   metafor::rma(coef(object) , variances(object), method = method, ...)
@@ -545,7 +560,8 @@ forest.perf <- function(object, method = "REML", ...) {
                          theta.summary.pi.ub = ma$pi.ub,
                          ...)
   plot(fp)
-  invisible(NaN) # To be replaced with fp, when metapred() can handle it.
+  # invisible(NaN) # To be replaced with fp, when metapred() can handle it.
+  fp
 }
 # 
 # sampleBinary <- function(n = 50, J = 1, b = rep(log(2), J), alpha = NULL, col.names = NULL ) {
