@@ -430,30 +430,6 @@ plot.listofperf <- function(x, pfn, ...) { # xlab tbi from perfFUN
 plot.mp.cv.val <- function(x, y, ...)
   plot.listofperf(x$perf.full, x$perf.name, ...)
 
-ma.perf <- function(object, method = "REML", ...) {
-  if (object$class[[1]] == "mp.perf" || object$class[[1]] == "recal") {
-    ma <- uvmeta(r = object[["estimate"]], r.vi = object$var, method = method) # uvmeta uses a Student T distribution, in contrast to metafor
-    return(list(est = ma$est,     
-                pi.lb = ma$pi.lb,
-                pi.ub = ma$pi.ub,
-                ci.lb = ma$ci.lb,
-                ci.ub = ma$ci.ub,
-                tau2  = ma$tau2,
-                tau   = sqrt(ma$tau2)))
-  } else if (object$class[[1]] == "auc") {
-    ma <- valmeta(measure = "cstat", cstat = object[["estimate"]], 
-                  cstat.cilb = object[,"ci.lb"], cstat.ciub = object[,"ci.ub"],
-                  cstat.cilv = 0.95, method = method)
-    return(list(est = ma$est,
-                pi.lb = ma$pi.lb,
-                pi.ub = ma$pi.ub,
-                ci.lb = ma$ci.lb,
-                ci.ub = ma$ci.ub)) # valmeta does not produce tau! (but can be obtained from ma$fit if "ret.fit=T")
-  }
-  stop("class not recognized")
-}
-
-
 #' Random effects meta-analysis
 #' 
 #' Meta-analysis of the performance or coefficients of a metapred object.
@@ -483,6 +459,30 @@ ma.mp.cv.val <- function(object, method = "REML", ...)
 #' @export
 ma.mp.global <- function(object, method = "REML", ...)
   metafor::rma(coef(object) , variances(object), method = method, ...)
+
+#' @export
+ma.perf <- function(object, method = "REML", ...) {
+  if (object$class[[1]] == "mp.perf" || object$class[[1]] == "recal") {
+    ma <- uvmeta(r = object[["estimate"]], r.vi = object$var, method = method) # uvmeta uses a Student T distribution, in contrast to metafor
+    return(list(est = ma$est,     
+                pi.lb = ma$pi.lb,
+                pi.ub = ma$pi.ub,
+                ci.lb = ma$ci.lb,
+                ci.ub = ma$ci.ub,
+                tau2  = ma$tau2,
+                tau   = sqrt(ma$tau2)))
+  } else if (object$class[[1]] == "auc") {
+    ma <- valmeta(measure = "cstat", cstat = object[["estimate"]], 
+                  cstat.cilb = object[,"ci.lb"], cstat.ciub = object[,"ci.ub"],
+                  cstat.cilv = 0.95, method = method)
+    return(list(est = ma$est,
+                pi.lb = ma$pi.lb,
+                pi.ub = ma$pi.ub,
+                ci.lb = ma$ci.lb,
+                ci.ub = ma$ci.ub)) # valmeta does not produce tau! (but can be obtained from ma$fit if "ret.fit=T")
+  }
+  stop("class not recognized")
+}
 
 #' Forest plot of a metapred fit
 #' 
@@ -540,27 +540,28 @@ forest.metapred <- function(object, perfFUN = 1, step = NULL, method = "REML", m
 #               xlab = if (is.character(statistic)) statistic else
 #                 object[["perf.names"]][[statistic]], ...)
 
-forest.mp.cv.val <- function(object, perfFUN = 1, method = "REML", ...) 
-  forest.perf(perf(object, perfFUN = perfFUN, ...),
-              xlab = if (is.character(perfFUN)) perfFUN else
-                object$perf.names[[perfFUN]], method = method, ...)
+forest.mp.cv.val <- function(object, perfFUN = 1, method = "REML", xlab = NULL, ...) {
+    if (is.null(xlab))
+      xlab <- if (is.character(perfFUN)) perfFUN else  object$perf.names[[perfFUN]]
+  forest.perf(perf(object, perfFUN = perfFUN, ...), method = method, xlab = xlab, ...)
+}
+  
 
 forest.perf <- function(object, method = "REML", ...) {
   if (is.null(theta.slab <- list(...)$theta.slab))
     theta.slab <- as.character(object$val.strata)
   ma <- ma.perf(object, method = method)
-  fp <- metamisc::forest(theta       = object[["estimate"]],
-                         theta.ci.lb = object$ci.lb,
-                         theta.ci.ub = object$ci.ub,
-                         theta.slab  = theta.slab,
-                         theta.summary       = ma$est,
-                         theta.summary.ci.lb = ma$ci.lb,
-                         theta.summary.ci.ub = ma$ci.ub,
-                         theta.summary.pi.lb = ma$pi.lb,
-                         theta.summary.pi.ub = ma$pi.ub,
-                         ...)
+  fp <- forest(theta       = object[["estimate"]],
+               theta.ci.lb = object$ci.lb,
+               theta.ci.ub = object$ci.ub,
+               theta.slab  = theta.slab,
+               theta.summary       = ma$est,
+               theta.summary.ci.lb = ma$ci.lb,
+               theta.summary.ci.ub = ma$ci.ub,
+               theta.summary.pi.lb = ma$pi.lb,
+               theta.summary.pi.ub = ma$pi.ub,
+               ...)
   plot(fp)
-  # invisible(NaN) # To be replaced with fp, when metapred() can handle it.
   fp
 }
 # 
