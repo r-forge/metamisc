@@ -463,7 +463,8 @@ ma.mp.global <- function(object, method = "REML", ...)
 #' @export
 ma.perf <- function(object, method = "REML", ...) {
   if (object$class[[1]] == "mp.perf" || object$class[[1]] == "recal") {
-    ma <- uvmeta(r = object[["estimate"]], r.vi = object$var, method = method) # uvmeta uses a Student T distribution, in contrast to metafor
+    # uvmeta uses a Student T distribution, in contrast to metafor
+    ma <- uvmeta(r = object[["estimate"]], r.vi = object$var, method = method) 
     return(list(est = ma$est,     
                 pi.lb = ma$pi.lb,
                 pi.ub = ma$pi.ub,
@@ -472,15 +473,18 @@ ma.perf <- function(object, method = "REML", ...) {
                 tau2  = ma$tau2,
                 tau   = sqrt(ma$tau2)))
   } else if (object$class[[1]] == "auc") {
+    # valmeta does not produce tau by default. But can be obtained from ma$fit if "ret.fit=T")
     ma <- valmeta(measure = "cstat", cstat = object[["estimate"]], 
                   cstat.cilb = object[,"ci.lb"], cstat.ciub = object[,"ci.ub"],
-                  cstat.cilv = 0.95, method = method)
+                  cstat.cilv = 0.95, method = method, ret.fit = TRUE)
+  }
     return(list(est = ma$est,
                 pi.lb = ma$pi.lb,
                 pi.ub = ma$pi.ub,
                 ci.lb = ma$ci.lb,
-                ci.ub = ma$ci.ub)) # valmeta does not produce tau! (but can be obtained from ma$fit if "ret.fit=T")
-  }
+                ci.ub = ma$ci.ub,
+                tau2  = ma$fit$tau2,
+                tau   = sqrt(ma$fit$tau2))) 
   stop("class not recognized")
 }
 
