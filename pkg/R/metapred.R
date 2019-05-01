@@ -502,7 +502,7 @@ subset.metapred <- function(x, select = "cv", step = NULL, model = NULL, stratum
       out <- x[["stepwise"]][[step]][["cv"]][[model]]
     else if (identical(select, "stratified") || identical(select, "stratified.fit")) # stratified fit
       return(x[["stepwise"]][[step]][["cv"]][[model]][["stratified.fit"]])
-    else if (identical(select, "stratum") || identical(select, "strata"))            # stratum fit
+    else if (identical(select, "stratum")    || identical(select, "strata"))         # stratum fit
       out <- x[["stepwise"]][[step]][["cv"]][[model]][["stratified.fit"]][[stratum]]
     else
       stop("select must equal 'cv', 'global', 'stratified' or 'stratum'.")
