@@ -535,6 +535,7 @@ forest.metapred <- function(object, perfFUN = 1, step = NULL, method = "REML", m
 #' @param method character string specifying whether a fixed- or a random-effects model should be used to summarize the
 #' prediction model performance. A fixed-effects model is fitted when using method="FE". Random-effects models are fitted 
 #' by setting method equal to one of the following: "DL", "HE", "SJ", "ML", "REML", "EB", "HS", or "GENQ". Default is "REML".
+#' @param xlab Label on x-axis. Defaults to the name of the performance function.
 #' @param ... Other arguments passed to plotting internals. E.g. \code{title}. See \link{forest.default} for details.
 #' 
 #' @aliases forest.mp.cv.val forest.perf
