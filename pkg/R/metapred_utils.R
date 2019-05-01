@@ -210,7 +210,13 @@ getPredictMethod <- function(fit, two.stage = TRUE, predFUN = NULL, ...) {
       return(predictGLM)
     stop("No prediction method has been implemented for this model type yet for two-stage
          meta-analysis. You may supply one with the predFUN argument.")
-  } 
+  } else {
+    if (any(fit$cv[[1]]$stratum.class %in% c("logistf")))
+      return(predictlogistf)
+    
+    if (any(fit$cv[[1]]$stratum.class %in% c("glm", "lm")))
+      return(predictGLM)
+  }
   
   # Return default predict function if everything else fails
   return(predict)

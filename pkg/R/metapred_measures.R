@@ -454,7 +454,7 @@ ma.metapred<- function(object, method = "REML", select = "cv", ...)
 
 #' @export
 ma.mp.cv.val <- function(object, method = "REML", ...)
-  ma.perf(object[["perf"]], method = method, ...)
+  ma(perf(object, ...), method = method, ...)
 
 #' @export
 ma.mp.global <- function(object, method = "REML", ...)
@@ -487,6 +487,9 @@ ma.perf <- function(object, method = "REML", ...) {
                 tau   = sqrt(ma$fit$tau2))) 
   stop("class not recognized")
 }
+
+# ma.mp.cv.val <- function(object, method = "REML", ...) # old version, < 8 april 2019
+#   ma.perf(object[["perf"]], method = method, ...)
 
 #' Forest plot of a metapred fit
 #' 
