@@ -364,24 +364,13 @@ mean.of.large <- function(object, ...) {
 #' @importFrom metafor rma.uni
 #' @export
 plot.listofperf <- function(x, pfn, ...) { # xlab tbi from perfFUN
-  # print("get perf name")
-  # print("pfn:")
-  # print(pfn)
-  # print("...:")
-  # print(list(...))
-  # if (!is.null(pfn <- list(...)$pfn) && is.character(pfn)) {
+
     xlab <- paste(pfn, "in validation strata")
-  # } else {
-    # xlab <- "Performance in validation strata."  
-  # }
-  # print("get strata names")
+
   if (is.null(names(x))) # The # is to show users that the numbers are not their own. (no longer necessary)
     names(x) <- paste("#", seq_along(x), sep = "") 
-  # print("compute ci now:")
   z <- ci.listofperf(object = x, ...)
-  # z <<- z
-  # print("meta-analyze performance:")
-  
+
   # Thomas: I changed the implementation to uvmeta to ensure our prediction intervals are bsaed on Student T distribution
   # and to ensure we are using REML everywhere.
   if (inherits(x[[1]], "auc")) { # To be replaced by child function.
@@ -465,7 +454,7 @@ ma.perf <- function(object, method = "REML", ...) {
   if (object$class[[1]] == "mp.perf" || object$class[[1]] == "recal") {
     # uvmeta uses a Student T distribution, in contrast to metafor
     ma <- uvmeta(r = object[["estimate"]], r.vi = object$var, method = method) 
-    return(list(est = ma$est,     
+    return(data.frame(est = ma$est,     
                 pi.lb = ma$pi.lb,
                 pi.ub = ma$pi.ub,
                 ci.lb = ma$ci.lb,
@@ -478,7 +467,7 @@ ma.perf <- function(object, method = "REML", ...) {
                   cstat.cilb = object[,"ci.lb"], cstat.ciub = object[,"ci.ub"],
                   cstat.cilv = 0.95, method = method, ret.fit = TRUE)
   }
-    return(list(est = ma$est,
+    return(data.frame(est = ma$est,
                 pi.lb = ma$pi.lb,
                 pi.ub = ma$pi.ub,
                 ci.lb = ma$ci.lb,

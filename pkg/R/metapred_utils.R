@@ -233,9 +233,7 @@ predictGLM <- function(object, newdata, b = NULL, f = NULL, type = "response", .
   if (is.null(b)) b <- coef(object)
   if (is.null(f)) f <- formula(object)
   X <- model.matrix(f2rhsf(stats::as.formula(f)), data = newdata)
-  # X <<- X
-  # b <<- b
-  
+
   lp <- X %*% b
   
   if (identical(type, "response")) {
@@ -301,23 +299,37 @@ urma <- function(coefficients, variances, method = "DL", vcov = NULL, ...)
     stop("coefficients and variances must have the same dimensions.")
 
   meta.b <- meta.se <- meta.tau2 <- rep(NA, ncol(coefficients))
-  for (col in 1:ncol(coefficients)) {
+  meta.pi <- matrix(nrow = 2, ncol = ncol(coefficients))
+  for (col in seq_len(ncol(coefficients))) {
     tryCatch(
       r <- metafor::rma(coefficients[ , col] , variances[ , col], method = method, ...),
       error = function(e) {
         stop(paste("Error in univariate rma of variable:", names(coefficients)[col], ",as follows:", e))
         }
     )
-
+    
     meta.b[col]  <- r$beta
     meta.se[col] <- r$se
     meta.tau2[col] <- r$tau2
+
+
+    # Warning because this is highly unexpected!
+    # checks because otherwise an error is returned.
+    if (!identical(r$method, method))
+      warning(paste("metafor::rma switched automatically from ", method, " to ", r$method, " method.", sep = ""))
+
+    if (!identical(r$method, "FE")) {
+      cr <- metafor::predict.rma(r)
+      meta.pi[1, col] <- cr$cr.lb
+      meta.pi[2, col] <- cr$cr.ub
+    }
   }
 
   meta.v <- meta.se^2
+  rownames(meta.pi) <- c("pi.lb", "pi.ub")
+  colnames(meta.pi) <- names(meta.b) <- names(meta.v) <- names(meta.se) <- names(meta.tau2) <- colnames(coefficients)
 
-  names(meta.b) <- names(meta.v) <- names(meta.se) <- names(meta.tau2) <- colnames(coefficients)
-  list(coefficients = meta.b, variances = meta.v, se = meta.se, tau2 = meta.tau2, tau = sqrt(meta.tau2))
+  list(coefficients = meta.b, variances = meta.v, se = meta.se, tau2 = meta.tau2, tau = sqrt(meta.tau2), pi = meta.pi)
 }
 
 

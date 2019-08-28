@@ -941,7 +941,7 @@ mp.cv.val <- function(cv.dev, data, st.i, folds, recal.int = FALSE, stratified =
   cv.dev[["perf.names"]] <- perf.names
   
   # Multiple performance measures may be calculated.
-  perf.metapred <- function(perfFUN, cv.dev, folds, outcome, st.i, data, estFUN, p) {
+  perfcalc <- function(perfFUN, cv.dev, folds, outcome, st.i, data, estFUN, p) {
     perfFUN <- match.fun(perfFUN)
     
     perf.full <- perf.str <- list()
@@ -977,7 +977,7 @@ mp.cv.val <- function(cv.dev, data, st.i, folds, recal.int = FALSE, stratified =
     
   perf.all <- list()
   for (fun.id in seq_along(perfFUN)) # Single brackets intended!
-    perf.all[[fun.id]] <- perf.metapred(perfFUN[[fun.id]], cv.dev = cv.dev, folds = folds, outcome = outcome, 
+    perf.all[[fun.id]] <- perfcalc(perfFUN[[fun.id]], cv.dev = cv.dev, folds = folds, outcome = outcome, 
                                         st.i = st.i, data = data, estFUN = estFUN, p = p)
 
   names(perf.all) <- perf.names
@@ -1239,6 +1239,7 @@ mp.meta.fit <- function(stratified.fit, metaFUN = urma, meta.method = "DL") {
   out[["coefficients"]] <- meta$coefficients
   out[["variances"]]    <- meta$variances
   out[["tau"]]          <- meta$tau
+  out[["pi"]]           <- meta$pi
   out[["nobs.strata"]]  <- sapply(stratified.fit, nobs)
   out[["nobs"]]         <- sum(out[["nobs.strata"]])
   
@@ -1526,7 +1527,7 @@ ci.mse <- function(object, conf = .95, ...) {
 #' generalizability(object, ...)
 #' 
 #' @param object A model fit object, either a \link{metapred} or \code{subset(metapred)} object.
-#' @param ... By default, the final model is selected. This parameter allows other arguments passed 
+#' @param ... By default, the final model is selected. This parameter allows other arguments to be passed 
 #' to \link{subset.metapred} such that the generalizability estimates of other steps/models may be
 #' returned.. 
 #' 
@@ -1558,8 +1559,8 @@ gen.mp.cv.val <- function(object, genFUN = 1, ...)
 #' performance(object, ...)
 #' 
 #' @param object A model fit object, either a \link{metapred} or \code{subset(metapred)} object.
-#' @param ... By default, the final model is selected. This parameter allows other arguments passed 
-#' to \link{subset.metapred} such that the performance estimates of other steps/models may be
+#' @param ... By default, the final model is selected. This parameter allows other arguments to be
+#' passed to \link{subset.metapred} such that the performance estimates of other steps/models may be
 #' returned.. 
 #' 
 #' @export
@@ -1576,3 +1577,4 @@ perf.metapred <- function(object, perfFUN = 1, ...)
 #' @export
 perf.mp.cv.val <- function(object, perfFUN = 1, ...)
   object[["perf.all"]][[perfFUN]]
+
