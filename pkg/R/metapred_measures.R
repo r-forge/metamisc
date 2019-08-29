@@ -438,7 +438,7 @@ ma <- function(object, method, ...)
   UseMethod("ma")
 
 #' @export
-ma.metapred<- function(object, method = "REML", select = "cv", ...)
+ma.metapred <- function(object, method = "REML", select = "cv", ...)
   ma(subset(object, select, ...), method = method, ...)
 
 #' @export
@@ -447,33 +447,46 @@ ma.mp.cv.val <- function(object, method = "REML", ...)
 
 #' @export
 ma.mp.global <- function(object, method = "REML", ...)
-  metafor::rma(coef(object) , variances(object), method = method, ...)
+  ma(object$stratified.fit, method = method, ...)
+  
+#' @export
+ma.mp.stratified.fit <- function(object, method = "REML", ...) {
+  m <- mp.meta.fit(object, meta.method = method, ...)
+  with(m, data.frame(coefficients, variances, se, ci.lb, ci.ub, tau2, se.tau2, pi.lb, pi.ub))
+}
+  
 
 #' @export
-ma.perf <- function(object, method = "REML", ...) {
+ma.perf <- function(object, method = "REML", test = "knha", level = .95, ...) {
   if (object$class[[1]] == "mp.perf" || object$class[[1]] == "recal") {
     # uvmeta uses a Student T distribution, in contrast to metafor
-    ma <- uvmeta(r = object[["estimate"]], r.vi = object$var, method = method) 
-    return(data.frame(est = ma$est,     
-                pi.lb = ma$pi.lb,
-                pi.ub = ma$pi.ub,
-                ci.lb = ma$ci.lb,
-                ci.ub = ma$ci.ub,
-                tau2  = ma$tau2,
-                tau   = sqrt(ma$tau2)))
+    ma <- uvmeta(r = object[["estimate"]], r.vi = object$var, method = method, test = test,
+                 pars = list(level = level)) 
+    return(data.frame(est     = ma$est,
+                      se      = ma$se,
+                      ci.lb   = ma$ci.lb,
+                      ci.ub   = ma$ci.ub,
+                      # tau   = sqrt(ma$tau2),
+                      tau2    = ma$tau2,
+                      se.tau2 = ma$se.tau2,
+                      pi.lb   = ma$pi.lb,
+                      pi.ub   = ma$pi.ub))
   } else if (object$class[[1]] == "auc") {
     # valmeta does not produce tau by default. But can be obtained from ma$fit if "ret.fit=T")
     ma <- valmeta(measure = "cstat", cstat = object[["estimate"]], 
                   cstat.cilb = object[,"ci.lb"], cstat.ciub = object[,"ci.ub"],
-                  cstat.cilv = 0.95, method = method, ret.fit = TRUE)
+                  cstat.cilv = level, method = method, ret.fit = TRUE, test = test)
+    return(data.frame(est     = ma$est,
+                      se      = ma$fit$se,
+                      ci.lb   = ma$ci.lb,
+                      ci.ub   = ma$ci.ub,
+                      # tau     = sqrt(ma$fit$tau2),
+                      tau2    = ma$fit$tau2,
+                      se.tau2 = ma$fit$se.tau2,
+                      pi.lb   = ma$pi.lb,
+                      pi.ub   = ma$pi.ub)) 
   }
-    return(data.frame(est = ma$est,
-                pi.lb = ma$pi.lb,
-                pi.ub = ma$pi.ub,
-                ci.lb = ma$ci.lb,
-                ci.ub = ma$ci.ub,
-                tau2  = ma$fit$tau2,
-                tau   = sqrt(ma$fit$tau2))) 
+
   stop("class not recognized")
 }
 

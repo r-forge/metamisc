@@ -1238,8 +1238,15 @@ mp.meta.fit <- function(stratified.fit, metaFUN = urma, meta.method = "DL") {
   
   out[["coefficients"]] <- meta$coefficients
   out[["variances"]]    <- meta$variances
+  out[["se"]]           <- meta$se
+  out[["ci.lb"]]        <- meta$ci.lb
+  out[["ci.ub"]]        <- meta$ci.ub
   out[["tau"]]          <- meta$tau
-  out[["pi"]]           <- meta$pi
+  out[["tau2"]]         <- meta$tau2
+  out[["se.tau2"]]      <- meta$se.tau2
+  out[["pi"]]           <- c(meta$pi.lb, meta$pi.ub)
+  out[["pi.lb"]]        <- meta$pi.lb
+  out[["pi.ub"]]        <- meta$pi.ub
   out[["nobs.strata"]]  <- sapply(stratified.fit, nobs)
   out[["nobs"]]         <- sum(out[["nobs.strata"]])
   
