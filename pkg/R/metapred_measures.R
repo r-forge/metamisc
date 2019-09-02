@@ -457,11 +457,10 @@ ma.mp.stratified.fit <- function(object, method = "REML", ...) {
   
 
 #' @export
-ma.perf <- function(object, method = "REML", test = "knha", level = .95, ...) {
+ma.perf <- function(object, method = "REML", test = "knha", ...) {
   if (object$class[[1]] == "mp.perf" || object$class[[1]] == "recal") {
     # uvmeta uses a Student T distribution, in contrast to metafor
-    ma <- uvmeta(r = object[["estimate"]], r.vi = object$var, method = method, test = test,
-                 pars = list(level = level)) 
+    ma <- uvmeta(r = object[["estimate"]], r.vi = object$var, method = method, test = test) 
     return(data.frame(est     = ma$est,
                       se      = ma$se,
                       ci.lb   = ma$ci.lb,
@@ -473,9 +472,9 @@ ma.perf <- function(object, method = "REML", test = "knha", level = .95, ...) {
                       pi.ub   = ma$pi.ub))
   } else if (object$class[[1]] == "auc") {
     # valmeta does not produce tau by default. But can be obtained from ma$fit if "ret.fit=T")
-    ma <- valmeta(measure = "cstat", cstat = object[["estimate"]], 
+    ma <- valmeta(measure = "cstat", cstat = object[["estimate"]], cstat.se = object[["se"]],
                   cstat.cilb = object[,"ci.lb"], cstat.ciub = object[,"ci.ub"],
-                  cstat.cilv = level, method = method, ret.fit = TRUE, test = test)
+                  method = method, ret.fit = TRUE, test = test)
     return(data.frame(est     = ma$est,
                       se      = ma$fit$se,
                       ci.lb   = ma$ci.lb,

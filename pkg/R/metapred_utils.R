@@ -345,8 +345,7 @@ logistfirth <- function(formula = attr(data, "formula"), data = sys.parent(), pl
 #         method = r$method)
 # }
 
-urma <- function(coefficients, variances, method = "DL", vcov = NULL, ...)
-{
+urma <- function(coefficients, variances, method = "DL", vcov = NULL, ...) {
   if (!(is.data.frame(coefficients) || is.matrix(coefficients)) || !(is.data.frame(variances) || is.matrix(variances)) )
     stop("coefficients and variances must both be a data.frame or matrix.")
   if (!identical(dim(coefficients), dim(variances)))
