@@ -14,11 +14,14 @@ center <- function(x, center.in) {
 
 
 # Center covariates within clusters
+#
+# Centers all except for y.name and cluster.name
+#
 # data data.frame
 # y.name character, name of outcome variable
 # cluster.name character, name of cluster variable.
 centerCovs <- function(data, y.name, cluster.name) {
-  to.center <- which((!(colnames(data) == cluster.name | colnames(data) == y.name) ) & sapply(data, is.numeric))
+  to.center <- which((!(colnames(data) %in% cluster.name | colnames(data) %in% y.name) ) & sapply(data, is.numeric))
   cluster.vec <- data[ , cluster.name]
   
   for (col in to.center)
