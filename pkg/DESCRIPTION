@@ -11,7 +11,7 @@ Description: Meta-analysis of diagnostic and prognostic modeling studies. Summar
     diagnostic test accuracy and prediction model performance. Validate, update and 
     combine published prediction models. Develop new prediction models with data from multiple studies. 
 Imports: metafor (>= 2.0.0), mvtnorm,  lme4, plyr, methods, pROC, ggplot2
-Depends: R (>= 3.2.0), stats, graphics
+Depends: R (>= 3.5.0), stats, graphics
 Suggests: runjags, rjags, logistf (>=	1.23), testthat (>= 1.0.2)
 License: GPL-3
 URL: http://r-forge.r-project.org/projects/metamisc/
