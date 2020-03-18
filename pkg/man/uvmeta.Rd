@@ -4,9 +4,20 @@
 \alias{uvmeta}
 \title{Univariate meta-analysis}
 \usage{
-uvmeta(r, r.se, r.vi, method = "REML", test = "knha", labels,
-  na.action, n.chains = 4, pars, ret.fit = FALSE, verbose = FALSE,
-  ...)
+uvmeta(
+  r,
+  r.se,
+  r.vi,
+  method = "REML",
+  test = "knha",
+  labels,
+  na.action,
+  n.chains = 4,
+  pars,
+  ret.fit = FALSE,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{r}{Vector of numerics containing the effect size of each study}

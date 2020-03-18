@@ -4,10 +4,37 @@
 \alias{valmeta}
 \title{Meta-analysis of prediction model performance}
 \usage{
-valmeta(measure = "cstat", cstat, cstat.se, cstat.cilb, cstat.ciub,
-  cstat.cilv, sd.LP, OE, OE.se, OE.cilb, OE.ciub, OE.cilv, citl, citl.se,
-  N, O, E, Po, Po.se, Pe, data, method = "REML", test = "knha",
-  ret.fit = FALSE, verbose = FALSE, slab, n.chains = 4, pars, ...)
+valmeta(
+  measure = "cstat",
+  cstat,
+  cstat.se,
+  cstat.cilb,
+  cstat.ciub,
+  cstat.cilv,
+  sd.LP,
+  OE,
+  OE.se,
+  OE.cilb,
+  OE.ciub,
+  OE.cilv,
+  citl,
+  citl.se,
+  N,
+  O,
+  E,
+  Po,
+  Po.se,
+  Pe,
+  data,
+  method = "REML",
+  test = "knha",
+  ret.fit = FALSE,
+  verbose = FALSE,
+  slab,
+  n.chains = 4,
+  pars,
+  ...
+)
 }
 \arguments{
 \item{measure}{A character string indicating which summary performance measure should be calculated. Options are
