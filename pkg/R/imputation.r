@@ -48,9 +48,27 @@ impute_conditional_mean <- function(x, mu, Sigma) {
   
   # If x, mu and Sigma are named, make sure that they are in the same order
   if(!is.null(names(x)) & !is.null(names(mu))) {
-    if(!all.equal(names(x), names(mu))) {
-      stop ("The variable names of 'x' and 'mu' do not correspond!")
-    }
+    stopifnot(all.equal(names(x), names(mu)))
+  }
+  
+  if (!is.null(names(mu)) & !is.null(colnames(Sigma))) {
+    stopifnot(all.equal(names(mu), colnames(Sigma)))
+    stopifnot(all.equal(names(mu), rownames(Sigma)))
+  }
+  
+  if (!is.null(names(x)) & !is.null(colnames(Sigma))) {
+    stopifnot(all.equal(names(x), colnames(Sigma)))
+    stopifnot(all.equal(names(x), rownames(Sigma)))
+  }
+  
+  # Check if anything needs to be imputed
+  if(sum(is.na(x))==0) {
+    return(x)
+  }
+  
+  # If all values for 'x' are missing, simply return the means
+  if (sum(is.na(x))==length(x)) {
+    return (mu)
   }
   
   # Check if Sigma is symmetric
