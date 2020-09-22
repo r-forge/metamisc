@@ -61,9 +61,9 @@ impute_conditional_mean <- function(x, mu, Sigma) {
     stopifnot(all.equal(names(x), rownames(Sigma)))
   }
   
-  # Check if anything needs to be imputed
+  # Return 'x' if no imputation is required
   if(sum(is.na(x))==0) {
-    return(x)
+    return (x)
   }
   
   # If all values for 'x' are missing, simply return the means
@@ -78,14 +78,13 @@ impute_conditional_mean <- function(x, mu, Sigma) {
   
   # Check if the covariance matrix is valid
   if (any(eigen(Sigma, only.values = TRUE)$values <= 0 )) {
-    stop("The covariance matrix is not positive semidefinite!")
+    stop ("The covariance matrix is not positive semidefinite!")
   }
   
   # Identify which values of x are missing and should be imputed
   dependent_ind <- which(is.na(x))
   given_ind <- which(!is.na(x))
   
-  B <- Sigma[dependent_ind, dependent_ind]
   C <- Sigma[dependent_ind, given_ind, drop = FALSE]
   D <- Sigma[given_ind, given_ind]
   CDinv <- C %*% solve(D)

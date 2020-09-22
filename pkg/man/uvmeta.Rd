@@ -131,7 +131,7 @@ meta-analysis summaries. \emph{Journal of Clinical Epidemiology} 2012; \bold{65}
 \item Riley RD, Higgins JPT, Deeks JJ. Interpretation of random effects meta-analyses. 
 \emph{British Medical Journal} 2011; \bold{342}: d549.
 \item Viechtbauer W. Conducting Meta-Analyses in R with the metafor Package. \emph{Journal of Statistical Software}. 
-2010; 36(3). Available from: \url{http://www.jstatsoft.org/v36/i03/}
+2010; 36(3). Available from: \url{https://www.jstatsoft.org/v36/i03/}
 }
 }
 \author{
