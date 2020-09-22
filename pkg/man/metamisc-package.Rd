@@ -1,8 +1,8 @@
 \name{metamisc-package}
 \alias{metamisc-package}
 \docType{package}
-\title{Meta-analysis of diagnosis and prognosis research studies}
-\description{Meta-analysis of diagnostic and prognostic modeling studies. Summarize estimates of prognostic factors, diagnostic test accuracy and prediction model performance. Validate, update and combine published prediction models.}
+\title{Meta-Analysis of Diagnosis and Prognosis Research Studies}
+\description{This package provides functions to facilitate meta-analysis of diagnosis and prognosis research studies. It includes functions to  summarize multiple estimates of prediction model discrimination and calibration performance, as described by Debray et al. (2019) <doi:10.1177/0962280218785504>. It also includes functions to evaluate funnel plot asymmetry, as described by Debray et al. (2018) <doi:10.1002/jrsm.1266>. Finally, the package provides functions for developing multivariable prediction models from datasets with clustering.}
 
 \details{
 %\tabular{ll}{
