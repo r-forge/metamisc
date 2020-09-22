@@ -1,7 +1,7 @@
 \name{metamisc-package}
 \alias{metamisc-package}
 \docType{package}
-\title{Diagnostic and Prognostic Meta-Analysis}
+\title{Meta-analysis of diagnosis and prognosis research studies}
 \description{Meta-analysis of diagnostic and prognostic modeling studies. Summarize estimates of prognostic factors, diagnostic test accuracy and prediction model performance. Validate, update and combine published prediction models.}
 
 \details{
