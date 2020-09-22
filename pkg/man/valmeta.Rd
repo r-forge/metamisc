@@ -248,7 +248,7 @@ valmeta(measure="OE", Po=Po, Pe=Pe, N=n, data=Framingham)
 Debray TPA, Damen JAAG, Snell KIE, Ensor J, Hooft L, Reitsma JB, et al. A guide to systematic review and meta-analysis 
 of prediction model performance. \emph{BMJ}. 2017;356:i6460.
 
-Debray TPA, Damen JAAG, Riley R, Snell KIE, Reitsma JB, Hooft L, et al. A framework for meta-analysis of prediction model studies with binary and time-to-event outcomes. \emph{Stat Methods Med Res}. 2019 Sep;28(9):2768–86. 
+Debray TPA, Damen JAAG, Riley R, Snell KIE, Reitsma JB, Hooft L, et al. A framework for meta-analysis of prediction model studies with binary and time-to-event outcomes. \emph{Stat Methods Med Res}. 2019 Sep;28(9):2768--86. 
 
 Steyerberg EW, Nieboer D, Debray TPA, van Houwelingen HC. Assessment of heterogeneity in an individual participant
 data meta-analysis of prediction models: An overview and illustration. \emph{Stat Med}. 2019; In press.
