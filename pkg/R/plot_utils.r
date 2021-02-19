@@ -111,8 +111,6 @@ forest.default <- function (theta,
   if (NA %in% c(theta.summary.pi.lb, theta.summary.pi.ub)) {
     add.predint <- FALSE
   }
-    
-  
   
   # Determine ordering
   if (sort=="asc") {
@@ -166,7 +164,7 @@ forest.default <- function (theta,
   #            ylab(xlab) + 
   #            xlab(""))
   
-  print(ALL)
+  #print(ALL)
   
   p <- with(ALL, ggplot(ALL[!is.na(ALL$mean), ], 
                         aes(x = order, y = mean, ymin = m.lower, ymax = m.upper)) +
@@ -177,7 +175,7 @@ forest.default <- function (theta,
                 sec.axis = ggplot2::sec_axis(
                 ~ .,
                 breaks = order,
-                labels = labels_axis2)) + #change order of studies
+                labels = labels_axis2)) +
               coord_flip() + 
               theme +
               ylab(xlab) + 
@@ -206,21 +204,24 @@ forest.default <- function (theta,
     g2$ci.upper <- theta.summary.ci.ub
     g2$ci.lower <- theta.summary.ci.lb
     
-    g3 <- with(ALL, subset(ALL, study == label.summary))
-    g3$pi.upper <- theta.summary.pi.ub
-    g3$pi.lower <- theta.summary.pi.lb
+    
+    # Add confidence interval of the summary estimate
+    p <- p + with(g2, geom_errorbar(data=g2, aes(ymin = ci.lower, ymax = ci.upper, x = order), width = 0.5, size=1.0))
+    
+    # Add summary estimate
+    p <- p + with(g2, geom_point(data=g2, aes(x = order, y = mean), shape=23, size=3, fill="white"))
     
     # Add (approximate) prediction interval
     if (add.predint) {
-      p <- p + with(g3, geom_errorbar(data=g3, aes(ymin = pi.lower, ymax = pi.upper, x=label.predint), 
-                                      width = 0.5, size=1.0, linetype=predint.linetype))
+      g3 <- with(ALL, subset(ALL, study == label.predint))
+      g3$pi.upper <- theta.summary.pi.ub
+      g3$pi.lower <- theta.summary.pi.lb
+      
+      p <- p + with(g3, geom_errorbar(data=g3, aes(ymin = pi.lower, ymax = pi.upper, x = order), 
+                                      width = 0.5, 
+                                      size = 1.0, 
+                                      linetype = predint.linetype))
     }
-    
-    # Add confidence interval of the summary estimate
-    p <- p + with(g2, geom_errorbar(data=g2, aes(ymin = ci.lower, ymax = ci.upper, x=label.summary), width = 0.5, size=1.0))
-    
-    # Add summary estimate
-    p <- p + with(g2, geom_point(data=g2, shape=23, size=3, fill="white"))
   }
   
 
