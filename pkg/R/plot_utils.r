@@ -148,20 +148,41 @@ forest.default <- function (theta,
   } 
   
   
-  ALL <- data.frame(study=slab, mean=yi, m.lower=ci.lb, m.upper=ci.ub, order=length(yi):1, scat=scat)
+  ALL <- data.frame(study = slab, mean = yi, m.lower = ci.lb, m.upper = ci.ub, order = length(yi):1, scat=scat)
   
 
-  # reorder factor levels based on another variable (HPD.mean)
+  # reorder factor levels based on another variable (by yi)
   ALL$study.ES_order <- reorder(ALL$study, ALL$order, mean) 
   
+  # Information for secondary axis
+  labels_axis2 <- paste(format(ALL$mean, digits=2, nsmall=2), " (", format(ALL$m.lower, digits=2, nsmall=2), " - ", format(ALL$m.upper, digits=2, nsmall=2), ")", sep = "")
+  
+  #p <- with(ALL, ggplot(ALL[!is.na(ALL$mean), ], 
+  #                      aes(x = study.ES_order, y = mean, ymin = m.lower, ymax = m.upper)) +
+  #            geom_pointrange(data = subset(ALL, scat == 1)) + 
+  #            scale_x_discrete(limits = rev(slab)) + #change order of studies
+  #            coord_flip() + 
+  #            theme +
+  #            ylab(xlab) + 
+  #            xlab(""))
+  
+  print(ALL)
+  
   p <- with(ALL, ggplot(ALL[!is.na(ALL$mean), ], 
-                        aes(x = study.ES_order, y = mean, ymin = m.lower, ymax = m.upper)) +
+                        aes(x = order, y = mean, ymin = m.lower, ymax = m.upper)) +
               geom_pointrange(data = subset(ALL, scat == 1)) + 
-              scale_x_discrete(limits=rev(slab)) + #change order of studies
+              scale_x_continuous(
+                breaks   = order,
+                labels   = study,
+                sec.axis = ggplot2::sec_axis(
+                ~ .,
+                breaks = order,
+                labels = labels_axis2)) + #change order of studies
               coord_flip() + 
               theme +
               ylab(xlab) + 
               xlab(""))
+
   
   if (!missing(xlim)) {
     p <- p + ylim(xlim)
