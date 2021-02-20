@@ -23,6 +23,8 @@
   refline = 0,
   label.summary = "Summary Estimate",
   label.predint = "Prediction Interval",
+  study.digits = 2,
+  study.shape = 15,
   ...
 )
 }
@@ -64,6 +66,10 @@ See \link[ggplot2]{ggtheme} for more information.}
 \item{label.summary}{Optional character string specifying the label for the summary estimate}
 
 \item{label.predint}{Optional character string specifying the label for the (approximate) prediction interval}
+
+\item{study.digits}{How many significant digits should be used to print the stuy results}
+
+\item{study.shape}{Plotting symbol to use for the study results. By default, a filled square is used.}
 
 \item{\dots}{Additional arguments, which are currently ignored.}
 }

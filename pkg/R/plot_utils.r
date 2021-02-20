@@ -42,6 +42,8 @@ forest <- function(...)
 #' @param refline Optional numeric specifying a reference line
 #' @param label.summary Optional character string specifying the label for the summary estimate
 #' @param label.predint Optional character string specifying the label for the (approximate) prediction interval
+#' @param study.digits How many significant digits should be used to print the stuy results
+#' @param study.shape Plotting symbol to use for the study results. By default, a filled square is used.
 #' @param \dots Additional arguments, which are currently ignored.
 #' 
 #' @author Thomas Debray <thomas.debray@gmail.com>
@@ -72,6 +74,8 @@ forest.default <- function (theta,
                     refline = 0,
                     label.summary = "Summary Estimate", 
                     label.predint = "Prediction Interval",
+                    study.digits = 2,
+                    study.shape = 15,
                     ...) {
   requireNamespace("ggplot2")
 
@@ -153,22 +157,14 @@ forest.default <- function (theta,
   ALL$study.ES_order <- reorder(ALL$study, ALL$order, mean) 
   
   # Information for secondary axis
-  labels_axis2 <- paste(format(ALL$mean, digits=2, nsmall=2), " (", format(ALL$m.lower, digits=2, nsmall=2), " - ", format(ALL$m.upper, digits=2, nsmall=2), ")", sep = "")
+  labels_axis2 <- paste(format(ALL$mean, digits = study.digits, nsmall=2), " (", 
+                        format(ALL$m.lower, digits = study.digits, nsmall=2), " - ", 
+                        format(ALL$m.upper, digits = study.digits, nsmall=2), ")", sep = "")
   
-  #p <- with(ALL, ggplot(ALL[!is.na(ALL$mean), ], 
-  #                      aes(x = study.ES_order, y = mean, ymin = m.lower, ymax = m.upper)) +
-  #            geom_pointrange(data = subset(ALL, scat == 1)) + 
-  #            scale_x_discrete(limits = rev(slab)) + #change order of studies
-  #            coord_flip() + 
-  #            theme +
-  #            ylab(xlab) + 
-  #            xlab(""))
-  
-  #print(ALL)
   
   p <- with(ALL, ggplot(ALL[!is.na(ALL$mean), ], 
                         aes(x = order, y = mean, ymin = m.lower, ymax = m.upper)) +
-              geom_pointrange(data = subset(ALL, scat == 1)) + 
+              geom_pointrange(data = subset(ALL, scat == 1), shape = study.shape) + 
               scale_x_continuous(
                 breaks   = order,
                 labels   = study,
