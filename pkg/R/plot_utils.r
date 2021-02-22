@@ -152,14 +152,16 @@ forest.default <- function (theta,
   
   ALL <- data.frame(study = slab, mean = yi, m.lower = ci.lb, m.upper = ci.ub, order = length(yi):1, scat=scat)
   
+  # Add extra space between the study results and the summary estimates
+  ALL$order[which (ALL$study %in% c(label.summary, label.predint))] <- ALL$order[which (ALL$study %in% c(label.summary, label.predint))]-1
 
   # reorder factor levels based on another variable (by yi)
   ALL$study.ES_order <- reorder(ALL$study, ALL$order, mean) 
   
   # Information for secondary axis
-  labels_axis2 <- paste(format(ALL$mean, digits = study.digits, nsmall=2), " (", 
+  labels_axis2 <- paste(format(ALL$mean, digits = study.digits, nsmall=2), " [", 
                         format(ALL$m.lower, digits = study.digits, nsmall=2), " - ", 
-                        format(ALL$m.upper, digits = study.digits, nsmall=2), ")", sep = "")
+                        format(ALL$m.upper, digits = study.digits, nsmall=2), "]", sep = "")
   
   
   p <- with(ALL, ggplot(ALL[!is.na(ALL$mean), ], 
@@ -175,7 +177,8 @@ forest.default <- function (theta,
               coord_flip() + 
               theme +
               ylab(xlab) + 
-              xlab(""))
+              xlab("")) +
+    theme( axis.ticks.y.right = element_blank())
 
   
   if (!missing(xlim)) {
