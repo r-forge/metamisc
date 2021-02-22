@@ -42,8 +42,14 @@ forest <- function(...)
 #' @param refline Optional numeric specifying a reference line
 #' @param label.summary Optional character string specifying the label for the summary estimate
 #' @param label.predint Optional character string specifying the label for the (approximate) prediction interval
+#' @param nrows.before.summary How many empty rows should be introduced between the study results and the summary estimates
 #' @param study.digits How many significant digits should be used to print the stuy results
 #' @param study.shape Plotting symbol to use for the study results. By default, a filled square is used.
+#' @param col.diamond The filling color for the diamond representing the summary estimate. 
+#' E.g. "red", "blue", or hex color code ("#2e8aff")
+#' @param col.predint Line color for the prediction interval. E.g. "red", "blue", or hex color code ("#2e8aff")
+#' @param size.study Line width for the study results in mm
+#' @param size.predint Line width for the prediction interval in mm
 #' @param \dots Additional arguments, which are currently ignored.
 #' 
 #' @author Thomas Debray <thomas.debray@gmail.com>
@@ -74,8 +80,13 @@ forest.default <- function (theta,
                     refline = 0,
                     label.summary = "Summary Estimate", 
                     label.predint = "Prediction Interval",
+                    nrows.before.summary = 1,
                     study.digits = 2,
                     study.shape = 15,
+                    col.diamond = "white",
+                    col.predint = "black",
+                    size.study = 0.5,
+                    size.predint = 1,
                     ...) {
   requireNamespace("ggplot2")
 
@@ -85,6 +96,7 @@ forest.default <- function (theta,
   
   num.studies <- unique(c(length(theta), length(theta.ci.lb), length(theta.ci.ub), length(theta.slab)))
   if (length(num.studies)>1) stop(paste("Too few studies for a forest plot!"))
+  # study <- NULL
   
   
   #Extract data
@@ -150,10 +162,16 @@ forest.default <- function (theta,
   } 
   
   
-  ALL <- data.frame(study = slab, mean = yi, m.lower = ci.lb, m.upper = ci.ub, order = length(yi):1, scat=scat)
+  ALL <- data.frame("study" = slab, 
+                    "mean" = yi, 
+                    "m.lower" = ci.lb, 
+                    "m.upper" = ci.ub, 
+                    "order" = length(yi):1, 
+                    "scat" = scat)
   
   # Add extra space between the study results and the summary estimates
-  ALL$order[which (ALL$study %in% c(label.summary, label.predint))] <- ALL$order[which (ALL$study %in% c(label.summary, label.predint))]-1
+  rows.summaries <- which(ALL$study %in% c(label.summary, label.predint))
+  ALL$order[rows.summaries] <- ALL$order[rows.summaries] - nrows.before.summary
 
   # reorder factor levels based on another variable (by yi)
   ALL$study.ES_order <- reorder(ALL$study, ALL$order, mean) 
@@ -166,19 +184,21 @@ forest.default <- function (theta,
   
   p <- with(ALL, ggplot(ALL[!is.na(ALL$mean), ], 
                         aes(x = order, y = mean, ymin = m.lower, ymax = m.upper)) +
-              geom_pointrange(data = subset(ALL, scat == 1), shape = study.shape) + 
+              theme +
+              theme(axis.ticks.y.right = element_blank(),
+                    panel.grid.minor.y = element_blank()) +
+              geom_pointrange(data = subset(ALL, scat == 1), shape = study.shape, size = size.study) + 
               scale_x_continuous(
                 breaks   = order,
                 labels   = study,
                 sec.axis = ggplot2::sec_axis(
-                ~ .,
-                breaks = order,
-                labels = labels_axis2)) +
+                  ~ .,
+                  breaks = order,
+                  labels = labels_axis2)
+                ) +
               coord_flip() + 
-              theme +
               ylab(xlab) + 
-              xlab("")) +
-    theme( axis.ticks.y.right = element_blank())
+              xlab(""))
 
   
   if (!missing(xlim)) {
@@ -205,10 +225,15 @@ forest.default <- function (theta,
     
     
     # Add confidence interval of the summary estimate
-    p <- p + with(g2, geom_errorbar(data=g2, aes(ymin = ci.lower, ymax = ci.upper, x = order), width = 0.5, size=1.0))
+    p <- p + with(g2, geom_errorbar(data = g2, aes(ymin = ci.lower, ymax = ci.upper, x = order), width = 0.5, size=1.0))
     
     # Add summary estimate
-    p <- p + with(g2, geom_point(data=g2, aes(x = order, y = mean), shape=23, size=3, fill="white"))
+    p <- p + with(g2, geom_point(data = g2, aes(x = order, y = mean), shape=23, size=3, fill = col.diamond))
+    
+    # Add diaomond
+    #df_diamond <- data.frame(row = c(g2$order+0.5, g2$order, g2$order-0.5, g2$order), ci = c(0, 1, 0, 0))
+    #print(df_diamond)
+    #p <- p + geom_polygon(data = df_diamond, aes(x = row, y = ci))
     
     # Add (approximate) prediction interval
     if (add.predint) {
@@ -216,10 +241,12 @@ forest.default <- function (theta,
       g3$pi.upper <- theta.summary.pi.ub
       g3$pi.lower <- theta.summary.pi.lb
       
-      p <- p + with(g3, geom_errorbar(data=g3, aes(ymin = pi.lower, ymax = pi.upper, x = order), 
-                                      width = 0.5, 
-                                      size = 1.0, 
-                                      linetype = predint.linetype))
+      p <- p + with(g3, geom_errorbar(data = g3, 
+                             aes(ymin = pi.lower, ymax = pi.upper, x = order), 
+                             size = size.predint, 
+                             width = 0.5,
+                             color = col.predint,
+                             linetype = predint.linetype))
     }
   }
   
