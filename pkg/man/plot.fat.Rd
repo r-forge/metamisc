@@ -12,6 +12,7 @@
   confint.col = "skyblue",
   confint.density = NULL,
   xlab = "Effect size",
+  add.pval = TRUE,
   ...
 )
 }
@@ -35,7 +36,9 @@ and \code{NA} suppress shading (and so allow color filling).}
 
 \item{xlab}{A title for the x axis}
 
-\item{...}{Additional arguments for \code{\link{plot}}.}
+\item{add.pval}{Logical to indicate whether a P-value should be added to the plot}
+
+\item{...}{Additional arguments.}
 }
 \description{
 Generates a funnel plot for a fitted \code{fat} object.
@@ -47,10 +50,9 @@ b.se <- ((log(Fibrinogen$HR.975) - log(Fibrinogen$HR.025))/(2*qnorm(0.975)))
 n.total <- Fibrinogen$N.total
 
 # A very simple funnel plot
-plot(fat(b=b, b.se=b.se))
+plot(fat(b=b, b.se=b.se), xlab = "Log hazard ratio")
 
-# Add custom tickmarks for the X-axis
-plot(fat(b=b, b.se=b.se, n.total=n.total, method="M-FIV"), xlab="Hazard ratio", xaxt="n")
-axis(1, at=c(log(0.5), log(1), log(1.5), log(2), log(3)), labels=c(0.5, 1, 1.5, 2,3))
+# Plot the funnel for an alternative test
+plot(fat(b=b, b.se=b.se, n.total=n.total, method="M-FIV"), xlab = "Log hazard ratio")
 
 }
