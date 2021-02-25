@@ -276,7 +276,7 @@ fat <- function(b, b.se, n.total, d.total, d1, d2, method="E-FIV")
   # Identify which studies can be used
   nstudies <- sum(studies.complete)
   
-  # Omit sudies with missing information
+  # Omit sudies with missing information  
   ds <- ds[studies.complete,]
   
   if (nstudies < length(studies.complete)) {
@@ -408,15 +408,23 @@ plot.fat <- function(x, ref, confint = TRUE, confint.level = 0.10, confint.col =
   
 
   newdata <- data.frame ("x" = sort(c(-max(x$model$data[,"x"]), x$model$data[,"x"], 2*max(x$model$data[,"x"]))),
-                         "y" = NA)
+                         "y" = NA,
+                         "beta_cil" = NA,
+                         "beta_ciu" = NA)
 
   predy <- predict(x$model, newdata = newdata, se.fit = TRUE)
   newdata$y <- predy$fit
   predy.lowerInt <- as.vector(predy$fit + qt(confint.level/2, df=x$df)*predy$se.fit) #90% confidence band
   predy.upperInt <- as.vector(predy$fit + qt((1-confint.level/2), df=x$df)*predy$se.fit) #90% confidence band
   
+  newdata$beta_cil<-(predy.lowerInt) 
+  newdata$beta_ciu <- (predy.upperInt )
+  
+  predy <- predict(x$model, newdata = data.frame(x = funcY(yval)), se.fit = TRUE)
+
   df <- data.frame ( "x" = xval,
-                     "y" = funcY(yval))
+                     "y" = funcY(yval),
+                     "pred_beta" = predy$fit)
   
   p <- with(df, ggplot(df, aes(x = x, y = y)) +
               ylab(ylab) +
@@ -435,6 +443,8 @@ plot.fat <- function(x, ref, confint = TRUE, confint.level = 0.10, confint.col =
     df3 <- data.frame("x" = c(predy.upperInt,rev(predy.lowerInt)),
                       "y" = funcY(c(newdata[,"x"], rev(newdata[,"x"]))))
     p <- p + with(df3, geom_polygon(data = df3, fill = confint.col))
+    
+
   }
   
   # Display regression slope

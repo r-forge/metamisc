@@ -30,6 +30,7 @@
   col.predint = "black",
   size.study = 0.5,
   size.predint = 1,
+  lty.ref = "dotted",
   ...
 )
 }
@@ -86,6 +87,8 @@ E.g. "red", "blue", or hex color code ("#2e8aff")}
 \item{size.study}{Line width for the study results in mm}
 
 \item{size.predint}{Line width for the prediction interval in mm}
+
+\item{lty.ref}{Line type for the reference line}
 
 \item{\dots}{Additional arguments, which are currently ignored.}
 }
