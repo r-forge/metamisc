@@ -164,7 +164,7 @@
 #' 
 #' # Bayesian random effects meta-analysis of the c-statistic
 #' fit2 <- valmeta(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl,
-#'                 cstat.ciub=c.index.95CIu, cstat.cilb=0.95, N=n, O=n.events, 
+#'                 cstat.ciub=c.index.95CIu, cstat.cilv=0.95, N=n, O=n.events, 
 #'                 data=EuroSCORE, method="BAYES", slab=Study)
 #' 
 #' # Bayesian one-stage random effects meta-analysis of the total O:E ratio
@@ -227,50 +227,51 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
   mf <- match.call()
   
   mf.slab       <- mf[[match("slab",   names(mf))]]
-  slab          <- eval(mf.slab,   data, enclos=sys.frame(sys.parent()))
+  slab          <- eval(mf.slab,   data, enclos = sys.frame(sys.parent()))
   mf.cstat      <- mf[[match("cstat", names(mf))]]
-  cstat         <- eval(mf.cstat, data, enclos=sys.frame(sys.parent()))
+  cstat         <- eval(mf.cstat, data, enclos = sys.frame(sys.parent()))
   mf.cstat.se   <- mf[[match("cstat.se", names(mf))]]
-  cstat.se      <- eval(mf.cstat.se, data, enclos=sys.frame(sys.parent()))
+  cstat.se      <- eval(mf.cstat.se, data, enclos = sys.frame(sys.parent()))
   mf.cstat.cilb <- mf[[match("cstat.cilb", names(mf))]]
-  cstat.cilb    <- eval(mf.cstat.cilb, data, enclos=sys.frame(sys.parent()))
+  cstat.cilb    <- eval(mf.cstat.cilb, data, enclos = sys.frame(sys.parent()))
   mf.cstat.ciub <- mf[[match("cstat.ciub", names(mf))]]
-  cstat.ciub    <- eval(mf.cstat.ciub, data, enclos=sys.frame(sys.parent()))
+  cstat.ciub    <- eval(mf.cstat.ciub, data, enclos = sys.frame(sys.parent()))
   mf.cstat.cilv <- mf[[match("cstat.cilv", names(mf))]]
-  cstat.cilv    <- eval(mf.cstat.cilv, data, enclos=sys.frame(sys.parent()))
+  cstat.cilv    <- eval(mf.cstat.cilv, data, enclos = sys.frame(sys.parent()))
   mf.sd.LP      <- mf[[match("sd.LP", names(mf))]]
-  sd.LP         <- eval(mf.sd.LP, data, enclos=sys.frame(sys.parent()))
+  sd.LP         <- eval(mf.sd.LP, data, enclos = sys.frame(sys.parent()))
   mf.OE         <- mf[[match("OE", names(mf))]]
-  OE            <- eval(mf.OE, data, enclos=sys.frame(sys.parent()))
+  OE            <- eval(mf.OE, data, enclos = sys.frame(sys.parent()))
   mf.OE.se      <- mf[[match("OE.se", names(mf))]]
-  OE.se         <- eval(mf.OE.se, data, enclos=sys.frame(sys.parent()))
+  OE.se         <- eval(mf.OE.se, data, enclos = sys.frame(sys.parent()))
   mf.OE.cilb    <- mf[[match("OE.cilb", names(mf))]]
-  OE.cilb       <- eval(mf.OE.cilb, data, enclos=sys.frame(sys.parent()))
+  OE.cilb       <- eval(mf.OE.cilb, data, enclos = sys.frame(sys.parent()))
   mf.OE.ciub    <- mf[[match("OE.ciub", names(mf))]]
-  OE.ciub       <- eval(mf.OE.ciub, data, enclos=sys.frame(sys.parent()))
+  OE.ciub       <- eval(mf.OE.ciub, data, enclos = sys.frame(sys.parent()))
   mf.OE.cilv    <- mf[[match("OE.cilv", names(mf))]]
-  OE.cilv       <- eval(mf.OE.cilv, data, enclos=sys.frame(sys.parent()))
+  OE.cilv       <- eval(mf.OE.cilv, data, enclos = sys.frame(sys.parent()))
   mf.citl       <- mf[[match("citl", names(mf))]]
-  citl          <- eval(mf.citl, data, enclos=sys.frame(sys.parent()))
+  citl          <- eval(mf.citl, data, enclos = sys.frame(sys.parent()))
   mf.citl.se    <- mf[[match("citl.se", names(mf))]]
-  citl.se       <- eval(mf.citl.se, data, enclos=sys.frame(sys.parent()))
+  citl.se       <- eval(mf.citl.se, data, enclos = sys.frame(sys.parent()))
   mf.N          <- mf[[match("N", names(mf))]]
-  N             <- eval(mf.N, data, enclos=sys.frame(sys.parent()))
+  N             <- eval(mf.N, data, enclos = sys.frame(sys.parent()))
   mf.O          <- mf[[match("O", names(mf))]]
-  O             <- eval(mf.O, data, enclos=sys.frame(sys.parent()))
+  O             <- eval(mf.O, data, enclos = sys.frame(sys.parent()))
   mf.E          <- mf[[match("E", names(mf))]]
-  E             <- eval(mf.E, data, enclos=sys.frame(sys.parent()))
+  E             <- eval(mf.E, data, enclos = sys.frame(sys.parent()))
   mf.Po         <- mf[[match("Po", names(mf))]]
-  Po            <- eval(mf.Po, data, enclos=sys.frame(sys.parent()))
+  Po            <- eval(mf.Po, data, enclos = sys.frame(sys.parent()))
   mf.Po.se      <- mf[[match("Po.se", names(mf))]]
-  Po.se         <- eval(mf.Po.se, data, enclos=sys.frame(sys.parent()))
+  Po.se         <- eval(mf.Po.se, data, enclos = sys.frame(sys.parent()))
   mf.Pe         <- mf[[match("Pe", names(mf))]]
-  Pe            <- eval(mf.Pe, data, enclos=sys.frame(sys.parent()))
+  Pe            <- eval(mf.Pe, data, enclos = sys.frame(sys.parent()))
 
-  if (!is.element(measure, c("cstat","OE")))
-    stop("Unknown 'measure' specified.")
+  if (is.null(method)) {
+    stop("No estimation method specified!")
+  }
   
-  if (method=="FE") {
+  if (method == "FE") {
     test <- "z" #Do not use SJHK adjustment in a fixed effect MA
   }
 
@@ -278,14 +279,14 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
   #######################################################################################
   # Check if we need to load runjags
   #######################################################################################
-  if (method=="BAYES") {
+  if (method == "BAYES") {
     if (!requireNamespace("runjags", quietly = TRUE)) {
       stop("The package 'runjags' is currently not installed!")
     } 
     if (!requireNamespace("rjags", quietly = TRUE)) {
       stop("The package 'rjags' is currently not installed!")
     } 
-    if (n.chains<1 | n.chains%%1!=0) {
+    if (n.chains < 1 | n.chains %% 1 != 0) {
       stop("Invalid number of chains specified for the Gibbs sampler!")
     }
   }
@@ -297,7 +298,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
   
   if (!no.data) {
     k <- dim(data)[1]
-  } else if (measure=="cstat") {
+  } else if (measure == "cstat") {
     if (!is.null(cstat)) {
       k <- length(cstat)
     } else if (!is.null(cstat.se)) {
@@ -309,7 +310,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
     } else if (!is.null(sd.LP)) {
       k <- length(sd.LP)
     }
-  } else if (measure=="OE") {
+  } else if (measure == "OE") {
     if (!is.null(OE)) {
       k <- length(OE)
     } else if (!is.null(OE.se)) {
@@ -329,44 +330,46 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
     } else if (!is.null(citl)) {
       k <- length(citl)
     }
+  } else {
+    stop("Unknown 'measure' specified.")
   }
   
-  if (k<1) stop("No data provided!")
+  if (k < 1) stop("No data provided!")
  
 
   #######################################################################################
   # Prepare data
   #######################################################################################
-  if(is.null(slab) & !no.data) {
+  if (is.null(slab) & !no.data) {
     slab <- rownames(data)
   } else if (!is.null(slab)) {
     slab <- make.unique(as.character(slab))
   }
   
-  if(is.null(cstat)) cstat <- rep(NA, times=k)
-  if (is.null(cstat.se)) cstat.se <- rep(NA, times=k)
-  if (is.null(cstat.cilb)) cstat.cilb <- rep(NA, times=k)
-  if (is.null(cstat.ciub)) cstat.ciub <- rep(NA, times=k)
-  if (is.null(cstat.cilv)) cstat.cilv <- rep(0.95, times=k)
-  if (is.null(O)) O <- rep(NA, times=k)
-  if (is.null(Po)) Po <- rep(NA, times=k)
-  if (is.null(N)) N <- rep(NA, times=k)
-  if (is.null(sd.LP)) sd.LP <- rep(NA, times=k)
-  if (is.null(OE)) OE <- rep(NA, times=k)
-  if (is.null(OE.se)) OE.se <- rep(NA, times=k)
-  if(is.null(OE.cilb)) OE.cilb <- rep(NA, times=k)
-  if(is.null(OE.ciub)) OE.ciub <- rep(NA, times=k)
-  if(is.null(OE.cilv)) OE.cilv <- rep(0.95, times=k) # Assume 95% CI by default 
-  if (is.null(E)) E <- rep(NA, times=k)
-  if (is.null(Po.se)) Po.se <- rep(NA, times=k)
-  if (is.null(Pe)) Pe <- rep(NA, times=k)
-  if (missing(citl)) citl <- rep(NA, times=k)
-  if (is.null(citl.se)) citl.se <- rep(NA, times=k)
+  if (is.null(cstat)) cstat <- rep(NA, times = k)
+  if (is.null(cstat.se)) cstat.se <- rep(NA, times = k)
+  if (is.null(cstat.cilb)) cstat.cilb <- rep(NA, times = k)
+  if (is.null(cstat.ciub)) cstat.ciub <- rep(NA, times = k)
+  if (is.null(cstat.cilv)) cstat.cilv <- rep(0.95, times = k)
+  if (is.null(O)) O <- rep(NA, times = k)
+  if (is.null(Po)) Po <- rep(NA, times = k)
+  if (is.null(N)) N <- rep(NA, times = k)
+  if (is.null(sd.LP)) sd.LP <- rep(NA, times = k)
+  if (is.null(OE)) OE <- rep(NA, times = k)
+  if (is.null(OE.se)) OE.se <- rep(NA, times = k)
+  if (is.null(OE.cilb)) OE.cilb <- rep(NA, times = k)
+  if (is.null(OE.ciub)) OE.ciub <- rep(NA, times = k)
+  if (is.null(OE.cilv)) OE.cilv <- rep(0.95, times = k) # Assume 95% CI by default 
+  if (is.null(E)) E <- rep(NA, times = k)
+  if (is.null(Po.se)) Po.se <- rep(NA, times = k)
+  if (is.null(Pe)) Pe <- rep(NA, times = k)
+  if (missing(citl)) citl <- rep(NA, times = k)
+  if (is.null(citl.se)) citl.se <- rep(NA, times = k)
   
   #######################################################################################
   # Prepare results
   #######################################################################################
-  est <- ci.lb <- ci.ub <- NA
+  ci.lb <- ci.ub <- NA
   
   #######################################################################################
   # Prepare object
@@ -393,7 +396,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
       g <- "log(cstat/(1-cstat))"
       #TODO: Specify inverse function inv.g
     } else {
-      stop (paste("Meta-analysis model currently not supported: '", out$model, '"', sep=""))
+      stop(paste("Meta-analysis model currently not supported: '", out$model, '"', sep = ""))
     }
 
     
@@ -483,13 +486,13 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
       mvmeta_dat <- list(theta = ds$theta,
                          theta.var = ds$theta.se**2,
                          Nstudies = length(ds$theta))
-      jags.model <- runjags::run.jags(model=model, 
+      jags.model <- runjags::run.jags(model = model, 
                                       monitor = c("mu.tobs", "mu.obs", "pred.obs", "bsTau", "PED"), 
                                       data = mvmeta_dat, 
                                       confidence = out$level, # Which credibility intervals do we need?
                                       n.chains = n.chains,
                                       silent.jags = !verbose,
-                                      inits=inits,
+                                      inits = inits,
                                       ...)
       
       # Check convergence

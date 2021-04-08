@@ -1,3 +1,5 @@
+
+
 # Adapted from R package 'car' to avoid package loading issues in R-forge
 deltaMethod <- function (object, g, vcov., func = g, constants, level = 0.95, ...) {
   if (!is.character(g)) 

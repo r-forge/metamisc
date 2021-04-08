@@ -217,7 +217,7 @@ valmeta(measure="OE", O=n.events, E=e.events, data=EuroSCORE, method="ML",
 
 # Bayesian random effects meta-analysis of the c-statistic
 fit2 <- valmeta(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl,
-                cstat.ciub=c.index.95CIu, cstat.cilb=0.95, N=n, O=n.events, 
+                cstat.ciub=c.index.95CIu, cstat.cilv=0.95, N=n, O=n.events, 
                 data=EuroSCORE, method="BAYES", slab=Study)
 
 # Bayesian one-stage random effects meta-analysis of the total O:E ratio
