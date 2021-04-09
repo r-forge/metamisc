@@ -343,6 +343,7 @@ print.fat <- function(x, digits = max(3, getOption("digits") - 3), ...) {
 #' @param confint A logical indicator. If \code{TRUE}, a confidence interval will be displayed for the estimated
 #' regression model (based on a Student-T distribution)
 #' @param confint.level Significance level for constructing the confidence interval.
+#' @param confint.alpha A numeric value between 0 and 1 indicating the opacity for the confidence region.
 #' @param confint.col The color for filling the confidence interval. Choose \code{NA} to leave polygons unfilled. 
 #' If \code{confint.density} is specified with a positive value this gives the color of the shading lines. 
 #' @param confint.density The density of shading lines, in lines per inch. The default value of \code{NULL} means 
@@ -364,106 +365,139 @@ print.fat <- function(x, digits = max(3, getOption("digits") - 3), ...) {
 #' # Plot the funnel for an alternative test
 #' plot(fat(b=b, b.se=b.se, n.total=n.total, method="M-FIV"), xlab = "Log hazard ratio")
 #' 
+#' @import ggplot2
 #' @importFrom stats qt
 #' @importFrom graphics plot axis polygon points lines box abline
 #' 
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' @author Frantisek Bartos <f.bartos96@gmail.com>
 #' @method plot fat
+#' 
 #' @export
-plot.fat <- function(x, ref, confint = TRUE, confint.level = 0.10, confint.col = "skyblue", confint.density = NULL,
+plot.fat <- function(x, ref, confint = TRUE, confint.level = 0.10, confint.col = "skyblue", confint.alpha = .50,
+                     confint.density = NULL,
                      xlab = "Effect size", add.pval = TRUE, ...) {
-  if (!inherits(x, "fat")) 
+  if (!inherits(x, "fat"))
     stop("Argument 'x' must be an object of class \"fat\".")
-  
   if (confint.level < 0 | confint.level > 1) {
     stop("Argument 'confint.level' must be between 0 and 1.")
   }
+  if (confint.alpha < 0 | confint.alpha > 1) {
+    stop("Argument 'confint.alpha' must be between 0 and 1.")
+  }
   
-  xval <- x$model$data[,"y"]
-  yval <- x$model$data[,"x"]
+  y <- NULL
   
-  reverse.yaxt <- TRUE
-  ymin <- 0
-  funcY <- function(y) { y }
-  
-  
+  xval <- x$model$data[, "y"]
   if (x$method %in% c("E-UW", "E-FIV")) {
     ylab <- "Standard error"
+    yval <- (x$model$data[, "x"])
+    ylim <- rev(c(0, max(yval, na.rm = T)))
+    xlim <- c(min(c(0, xval)), max(xval))
   } else if (x$method %in% c("M-FIV")) {
-    ylab <- "Total sample size"
-    reverse.yaxt <- FALSE
+    ylab <- "Sample size"
+    yval <- (x$model$data[, "x"])
+    ylim <- (c(0, max(yval, na.rm = T)))
+    xlim <- c(min(c(0, xval)), max(xval))
   } else if (x$method == "P-FPV") {
-    ylab <- "Total sample size"
-    reverse.yaxt <- FALSE
+    ylab <- "Sample size"
+    yval <- (x$model$data[, "x"])
+    ylim <- rev(c(0, max(yval, na.rm = T)))
+    xlim <- c(min(c(0, xval)), max(xval))
+    step <- ((max(yval) - min(yval))/5)
+    yax  <- c(plyr::round_any(1/min(yval), 10^(sapply(round(1/min(yval)), nchar) - 1)),
+              plyr::round_any(1/seq(step, 4 * step, by = step), 10), plyr::round_any(1/max(yval), 10))
   } else if (x$method == "D-FIV") {
-    ylab <- "Total number of events"
-    funcY <- function(y) { 1/y }
-    reverse.yaxt <- FALSE
+    ylab <- "Total events"
+    yval <- (x$model$data[, "x"])
+    ylim <- rev(c(0, max(yval, na.rm = T)))
+    xlim <- c(min(c(0, xval)), max(xval))
+    step <- ((max(yval) - min(yval))/4)
+    yax  <- c(plyr::round_any(1/min(yval), 10^(sapply(round(1/min(yval)), nchar) - 1)),
+              plyr::round_any(1/seq(step, 4 * step, by = step), 10), plyr::round_any(1/max(yval), 10))
   } else if (x$method == "D-FAV") {
-    ylab <- "Total number of events"
-    funcY <- function(y) { 1/y }
-    reverse.yaxt <- FALSE
+    ylab <- "Total events"
+    yval <- (x$model$data[, "x"])
+    ylim <- rev(c(0, max(yval, na.rm = T)))
+    xlim <- c(min(c(0, xval)), max(xval))
+    step <- ((max(yval) - min(yval))/4)
+    yax  <- c(plyr::round_any(1/min(yval),10^(sapply(round(1/min(yval)), nchar) - 1)),
+              plyr::round_any(1/seq(step, 4 * step, by = step), 10), plyr::round_any(1/max(yval), 10))
   } else {
     stop("Plot not supported!")
   }
   
-
-  newdata <- data.frame ("x" = sort(c(-max(x$model$data[,"x"]), x$model$data[,"x"], 2*max(x$model$data[,"x"]))),
-                         "y" = NA,
-                         "beta_cil" = NA,
-                         "beta_ciu" = NA)
-
-  predy <- predict(x$model, newdata = newdata, se.fit = TRUE)
-  newdata$y <- predy$fit
-  predy.lowerInt <- as.vector(predy$fit + qt(confint.level/2, df=x$df)*predy$se.fit) #90% confidence band
-  predy.upperInt <- as.vector(predy$fit + qt((1-confint.level/2), df=x$df)*predy$se.fit) #90% confidence band
+  newdata <- sort(c(-max(x$model$data[, "x"]), x$model$data[,"x"], 2 * max(x$model$data[, "x"])))
+  newdata <- as.data.frame(cbind(seq(min(newdata), max(newdata), length.out = 500), NA))
+  colnames(newdata) <- c("x", "y")
+  predy <- predict(x$model, newdata = newdata, se.fit = T)
+  predy.mean <- predy$fit
+  predy.lowerInt <- as.vector(predy$fit + qt(confint.level/2,  df = x$df) * predy$se.fit)
+  predy.upperInt <- as.vector(predy$fit + qt((1 - confint.level/2),  df = x$df) * predy$se.fit)
   
-  newdata$beta_cil<-(predy.lowerInt) 
-  newdata$beta_ciu <- (predy.upperInt )
+  # restricting plotting range to the selection
+  predy.upperInt[predy.upperInt < min(pretty(range(xlim)))] <- min(pretty(range(xlim)))
+  predy.upperInt[predy.upperInt > max(pretty(range(xlim)))] <- max(pretty(range(xlim)))
+  predy.lowerInt[predy.lowerInt < min(pretty(range(xlim)))] <- min(pretty(range(xlim)))
+  predy.lowerInt[predy.lowerInt > max(pretty(range(xlim)))] <- max(pretty(range(xlim)))
+  newdata[, "x"][newdata[, "x"] < min(pretty(range(ylim)))] <- min(pretty(range(ylim)))
+  newdata[, "x"][newdata[, "x"] > max(pretty(range(ylim)))] <- max(pretty(range(ylim)))
   
-  predy <- predict(x$model, newdata = data.frame(x = funcY(yval)), se.fit = TRUE)
-
-  df <- data.frame ( "x" = xval,
-                     "y" = funcY(yval),
-                     "pred_beta" = predy$fit)
-  
-  p <- with(df, ggplot(df, aes(x = x, y = y)) +
-              ylab(ylab) +
-              xlab(xlab))
-  
-  if (reverse.yaxt) {
-    p <- p + scale_y_continuous(trans = "reverse", limits = c(NA, ymin))
-    y.pval <- ymin
-  } else {
-    p <- p + scale_y_continuous(limits = c(ymin, NA))
-    y.pval <- Inf
-  }
-  
+  p <- ggplot2::ggplot(data = data.frame(x = xval, y = yval))
   
   if (confint) {
-    df3 <- data.frame("x" = c(predy.upperInt,rev(predy.lowerInt)),
-                      "y" = funcY(c(newdata[,"x"], rev(newdata[,"x"]))))
-    p <- p + with(df3, geom_polygon(data = df3, fill = confint.col))
     
-
+    
+    p <- p + ggplot2::geom_polygon(
+      mapping = ggplot2::aes(
+        x = x,
+        y = y
+      ),
+      data = data.frame(
+        x = c(
+          predy.upperInt,
+          rev(predy.lowerInt)),
+        y = c(
+          newdata[, "x"],
+          rev(newdata[, "x"]))
+      ),
+      fill  = confint.col,
+      alpha = confint.alpha
+    )
   }
   
-  # Display regression slope
-  p <- p + with(newdata, geom_line(data = newdata, aes(x = y, y = funcY(x)), lty = 2))
+  p <- p +
+    ggplot2::geom_point(
+      mapping = ggplot2::aes(x = x, y = y),
+      shape   = 19
+    ) +
+    ggplot2::geom_line(
+      mapping = ggplot2::aes(x = x, y = y),
+      data    = data.frame(
+        x = predy.mean[newdata[, "x"] > min(pretty(range(ylim))) & newdata[, "x"] < max(pretty(range(ylim)))],     # another plotting range restriction
+        y = newdata[, "x"][newdata[, "x"] > min(pretty(range(ylim))) & newdata[, "x"] < max(pretty(range(ylim)))]  # another plotting range restriction  
+      ),
+      linetype = 2)
   
-  # Add study results
-  p <- p + geom_point() 
+  
   
   if (missing(ref)) {
-    p <- p + geom_vline(xintercept=(x$fema$b))
+    p <- p + ggplot2::geom_vline(xintercept = x$fema$b)
   } else {
-    p <- p + geom_vline(xintercept = ref)
+    p <- p + ggplot2::geom_vline(xintercept = ref)
   }
   
-  # Add P-value
-  if (add.pval) {
-    p <- p + annotate("text",  x=Inf, y = y.pval, label = paste("P =", format(x$pval, digits = 2, nsmall = 2)), vjust=1, hjust=1)
+  p <- p + ggplot2::scale_x_continuous(
+    name   = xlab,
+    limits = range(pretty(range(xlim))),
+    breaks = pretty(range(xlim)))
+  if (x$method %in% c("P-FPV", "D-FAV", "D-FIV")){
+    p <- p + ggplot2::scale_y_reverse(name = ylab, breaks = 1/yax, labels = yax, limits = rev(range(pretty(ylim))))
+  } else if (x$method %in% c("E-UW", "E-FIV")){
+    p <- p + ggplot2::scale_y_reverse(name = ylab, limits = rev(range(pretty(ylim))), breaks = pretty(range(ylim)))
+  } else {
+    p <- p + ggplot2::scale_y_continuous(name = ylab, limits = range(pretty(ylim)), breaks = pretty(range(ylim)))
   }
   
-  
-  p
+  return(p)
 }

@@ -10,6 +10,7 @@
   confint = TRUE,
   confint.level = 0.1,
   confint.col = "skyblue",
+  confint.alpha = 0.5,
   confint.density = NULL,
   xlab = "Effect size",
   add.pval = TRUE,
@@ -29,6 +30,8 @@ regression model (based on a Student-T distribution)}
 
 \item{confint.col}{The color for filling the confidence interval. Choose \code{NA} to leave polygons unfilled. 
 If \code{confint.density} is specified with a positive value this gives the color of the shading lines.}
+
+\item{confint.alpha}{A numeric value between 0 and 1 indicating the opacity for the confidence region.}
 
 \item{confint.density}{The density of shading lines, in lines per inch. The default value of \code{NULL} means 
 that no shading lines are drawn. A zero value of density means no shading nor filling whereas negative values 
@@ -55,4 +58,9 @@ plot(fat(b=b, b.se=b.se), xlab = "Log hazard ratio")
 # Plot the funnel for an alternative test
 plot(fat(b=b, b.se=b.se, n.total=n.total, method="M-FIV"), xlab = "Log hazard ratio")
 
+}
+\author{
+Thomas Debray <thomas.debray@gmail.com>
+
+Frantisek Bartos <f.bartos96@gmail.com>
 }
