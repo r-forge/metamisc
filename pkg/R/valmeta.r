@@ -43,7 +43,6 @@
 #' @param test Optional character string specifying how test statistics and confidence intervals for the fixed effects 
 #' should be computed. By default (\code{test="knha"}), the method by Knapp and Hartung (2003) is used for 
 #' adjusting test statistics and confidence intervals. Type '\code{?rma}' for more details.
-#' @param ret.fit logical indicating whether the full results from the fitted model should also be returned.
 #' @param verbose If TRUE then messages generated during the fitting process will be displayed.
 #' @param slab Optional vector specifying the label for each study
 #' @param n.chains Optional numeric specifying the number of chains to use in the Gibbs sampler 
@@ -120,15 +119,18 @@
 ##'  \item{"ci.ub"}{upper bound of the confidence (or credibility) interval of the summary performance estimate.}
 ##'  \item{"pi.lb"}{lower bound of the (approximate) prediction interval of the summary performance estimate.}
 ##'  \item{"pi.ub"}{upper bound of the (approximate) prediction interval of the summary performance estimate.}
-##'  \item{"fit"}{the full results from the fitted model. Only defined if \code{ret.fit = TRUE}.}
+##'  \item{"fit"}{the full results from the fitted model.}
 ##'  \item{"slab"}{vector specifying the label of each study.}
 ##' }
 #' @references 
 #' Debray TPA, Damen JAAG, Snell KIE, Ensor J, Hooft L, Reitsma JB, et al. A guide to systematic review and meta-analysis 
-#' of prediction model performance. \emph{BMJ}. 2017;356:i6460.
+#' of prediction model performance. \emph{BMJ}. 2017;356:i6460. Available from: \url{https://www.bmj.com/content/356/bmj.i6460}
 #' 
 #' Debray TPA, Damen JAAG, Riley R, Snell KIE, Reitsma JB, Hooft L, et al. A framework for meta-analysis of prediction model studies 
 #' with binary and time-to-event outcomes. \emph{Stat Methods Med Res}. 2019 Sep;28(9):2768--86. 
+#' 
+#' Riley RD, Tierney JF, Stewart LA. Individual participant data meta-analysis: a handbook for healthcare research. 
+#' Hoboken, NJ: Wiley; 2021. ISBN: 978-1-119-33372-2.
 #' 
 #' Steyerberg EW, Nieboer D, Debray TPA, van Houwelingen HC. Assessment of heterogeneity in an individual participant
 #' data meta-analysis of prediction models: An overview and illustration. \emph{Stat Med}. 2019;38(22):4290--309.
@@ -137,8 +139,8 @@
 #' 2010; 36(3). Available from: \url{https://www.jstatsoft.org/v36/i03/}
 #'   
 #' @seealso \code{\link{ccalc}} to calculate concordance statistics and corresponding standard errors, \code{\link{oecalc}} to 
-#' calculate the total O:E ratio and corresponding standard errors, 
-#' \code{\link{plot.valmeta}} to generate forest plots
+#' calculate the total O:E ratio and corresponding standard errors, \code{\link{plot.valmeta}} to generate forest plots, 
+#' \code{\link{density.valmeta}} to display prior and posterior density plots.
 #' 
 #' @examples 
 #' ######### Validation of prediction models with a binary outcome #########
@@ -165,7 +167,7 @@
 #' 
 #' # Bayesian random effects meta-analysis of the c-statistic
 #' fit2 <- valmeta(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl,
-#'                 cstat.ciub=c.index.95CIu, cstat.cilv=0.95, N=n, O=n.events, 
+#'                 cstat.ciub=c.index.95CIu, N=n, O=n.events, 
 #'                 data=EuroSCORE, method="BAYES", slab=Study)
 #' 
 #' # Bayesian one-stage random effects meta-analysis of the total O:E ratio
@@ -179,7 +181,7 @@
 #'              hp.tau.df=3,            # Degrees of freedom for 'hp.tau.dist'
 #'              hp.tau.max=10)          # Maximum value for the between-study standard deviation
 #' fit3 <- valmeta(measure="OE", O=n.events, E=e.events, N=n, data=EuroSCORE.new,
-#'         method="BAYES", slab=Study, pars=pars, ret.fit = T)
+#'         method="BAYES", slab=Study, pars=pars)
 #' plot(fit3)
 #' print(fit3$fit$model) # Inspect the JAGS model
 #' print(fit3$fit$data)  # Inspect the JAGS data
@@ -203,7 +205,7 @@
 
 valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cstat.cilv,
                     sd.LP, OE, OE.se, OE.cilb, OE.ciub, OE.cilv, citl, citl.se, N, O, E, Po, Po.se, Pe, data, 
-                    method="REML", test="knha", ret.fit = FALSE, verbose=FALSE, slab, n.chains = 4, pars, ...) {
+                    method="REML", test="knha", verbose=FALSE, slab, n.chains = 4, pars, ...) {
   
   pars.default <- .initiateDefaultPars(pars)
   
@@ -386,21 +388,19 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
   #######################################################################################
   # Meta-analysis of the c-statistic
   #######################################################################################
-  if (measure=="cstat") {
+  if (measure == "cstat") {
     if (verbose) message("Extracting/computing estimates of the c-statistic ...")
     
     out$model <- pars.default$model.cstat
     
     if (out$model == "normal/identity") {
       g <- NULL
-    } else if (out$model=="normal/logit") {
+    } else if (out$model == "normal/logit") {
       g <- "log(cstat/(1-cstat))"
-      #TODO: Specify inverse function inv.g
     } else {
       stop(paste("Meta-analysis model currently not supported: '", out$model, '"', sep = ""))
     }
 
-    
     ds <- ccalc(cstat = cstat, 
                 cstat.se = cstat.se, 
                 cstat.cilb = cstat.cilb,
@@ -418,113 +418,62 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
     ## Assign study labels
     out$slab <- rownames(ds)
     
+    # Identify which studies can be used for meta-analysis
+    selstudies <- which(!is.na(ds$theta) & !is.na(ds$theta.se))
+    
     if (method != "BAYES") { # Use of rma
       
-      # Identify which studies can be used for meta-analysis
-      selstudies <- which(!is.na(ds$theta) & !is.na(ds$theta.se))
-      
       # Apply the meta-analysis
-      fit <- rma(yi=ds$theta, sei=ds$theta.se, method=method, test=test, slab=out$slab, ...) 
-      preds <- predict(fit, level=pars.default$level)
+      fit <- metafor::rma(yi = ds$theta, 
+                 sei = ds$theta.se, 
+                 method = method, 
+                 test = test, 
+                 slab = out$slab, ...)
+      
+      preds <- predict(fit, level = pars.default$level)
       
       # The predict function from metafor uses a Normal distribution for prediction intervals, 
       # Here, we will use a Student T distribution instead
-      predint <- calcPredInt(coefficients(fit), sigma2=fit$se**2, tau2=fit$tau2, k=fit$k,level=pars.default$level)
+      predint <- calcPredInt(coefficients(fit), 
+                             sigma2 = fit$se**2, 
+                             tau2 = fit$tau2, 
+                             k = fit$k,
+                             level = pars.default$level)
       pi.lb <- predint$lower
       pi.ub <- predint$upper
       
-      ds[selstudies, "theta.blup"] <- blup(fit)$pred
+      ds[selstudies, "theta.blup"] <- metafor::blup(fit)$pred
       
       if (pars.default$model.cstat == "normal/logit") {
         out$est <- as.numeric(inv.logit(coefficients(fit)))
         out$ci.lb <- inv.logit(preds$ci.lb)
         out$ci.ub <- inv.logit(preds$ci.ub)
-        out$pi.lb <- ifelse(method=="FE", inv.logit(ci.lb), inv.logit(pi.lb))
-        out$pi.ub <- ifelse(method=="FE", inv.logit(ci.ub), inv.logit(pi.ub))
+        out$pi.lb <- ifelse(method == "FE", inv.logit(ci.lb), inv.logit(pi.lb))
+        out$pi.ub <- ifelse(method == "FE", inv.logit(ci.ub), inv.logit(pi.ub))
       } else if (pars.default$model.cstat == "normal/identity") {
         out$est <- as.numeric(coefficients(fit))
         out$ci.lb <- preds$ci.lb
         out$ci.ub <- preds$ci.ub
-        out$pi.lb <- ifelse(method=="FE", ci.lb, pi.lb)
-        out$pi.ub <- ifelse(method=="FE", ci.ub, pi.ub)
+        out$pi.lb <- ifelse(method == "FE", ci.lb, pi.lb)
+        out$pi.ub <- ifelse(method == "FE", ci.ub, pi.ub)
       } else {
-        stop ("There is no implementation for the specified meta-analysis model!")
+        stop("There is no implementation for the specified meta-analysis model!")
       }
       
-      if (ret.fit)
-        out$fit <- fit
+      out$fit <- fit
       
       out$numstudies <- fit$k
     } else {
-      # All data are used!
-      out$numstudies <- dim(ds)[1]
+      bayesma <- run_Bayesian_MA_cstat(ds, pars = pars.default, n.chains = n.chains, verbose = verbose, ...) 
       
-      # Perform a Bayesian meta-analysis
-      model <- .generateBugsCstat(pars=pars.default, ...)
-      
-      # Generate initial values from the relevant distributions
-      model.pars <- list()
-      model.pars[[1]] <- list(param="mu.tobs", param.f=rnorm, 
-                              param.args=list(n=1, mean=pars.default$hp.mu.mean, sd=sqrt(pars.default$hp.mu.var)))
-      
-      if (pars.default$hp.tau.dist=="dunif") {
-        model.pars[[2]] <- list(param="bsTau", param.f=runif, 
-                                param.args=list(n=1, min=pars.default$hp.tau.min, 
-                                                max=pars.default$hp.tau.max))
-      } else if (pars.default$hp.tau.dist=="dhalft") {
-        model.pars[[2]] <- list(param="bsTau", param.f=rstudentt, 
-                                param.args=list(n=1, mean=pars.default$hp.tau.mean, 
-                                                sigma=pars.default$hp.tau.sigma, 
-                                                df=pars.default$hp.tau.df,
-                                                lower=pars.default$hp.tau.min, 
-                                                upper=pars.default$hp.tau.max))
-      } else {
-        stop("Invalid distribution for 'hp.tau.dist'!")
-      }
-
-      inits <- generateMCMCinits(n.chains=n.chains, model.pars=model.pars)
-      
-      mvmeta_dat <- list(theta = ds$theta,
-                         theta.var = ds$theta.se**2,
-                         Nstudies = length(ds$theta))
-      jags.model <- runjags::run.jags(model = model, 
-                                      monitor = c("mu.tobs", "mu.obs", "pred.obs", "bsTau", "PED"), 
-                                      data = mvmeta_dat, 
-                                      confidence = out$level, # Which credibility intervals do we need?
-                                      n.chains = n.chains,
-                                      silent.jags = !verbose,
-                                      inits = inits,
-                                      ...)
-      
-      # Check convergence
-      psrf.ul <-  jags.model$psrf$psrf[,2]
-      psrf.target <- jags.model$psrf$psrf.target
-      
-      if(sum(psrf.ul > psrf.target)>0) {
-        warning(paste("Model did not properly converge! The upper bound of the convergence diagnostic (psrf) exceeds", 
-                      psrf.target, "for the parameters", 
-                      paste(rownames(jags.model$psrf$psrf)[which(psrf.ul > psrf.target)], " (psrf=", 
-                            round(jags.model$psrf$psrf[which(psrf.ul > psrf.target),2],2), ")", collapse=", ", sep=""),
-                      ". Consider re-running the analysis by increasing the optional arguments 'adapt', 'burnin' and/or 'sample'."  ))
-      }
-      
-      fit <- jags.model$summaries
-      
-      
-      #Extract PED
-      fit.dev <- runjags::extract(jags.model,"PED")
-      txtLevel <- (out$level*100)
-      
-      out$est    <- fit["mu.obs", "Median"]
-      out$ci.lb  <- fit["mu.obs", paste("Lower", txtLevel, sep="")]
-      out$ci.ub  <- fit["mu.obs", paste("Upper", txtLevel, sep="")]
-      out$pi.lb  <- fit["pred.obs", paste("Lower", txtLevel, sep="")]
-      out$pi.ub  <- fit["pred.obs", paste("Upper", txtLevel, sep="")]
-      
-      if (ret.fit)
-        out$fit <- jags.model
-
-      out$PED <- sum(fit.dev$deviance)+sum(fit.dev$penalty)
+      out$numstudies  <- bayesma$numstudies
+      out$est    <- bayesma$est
+      out$ci.lb  <- bayesma$ci.lb
+      out$ci.ub  <- bayesma$ci.ub
+      out$pi.lb  <- bayesma$pi.lb
+      out$pi.ub  <- bayesma$pi.ub
+      out$PED <- bayesma$PED
+      out$fit <- bayesma$fit
     }
     
     out$data <- ds
@@ -533,7 +482,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
   #######################################################################################
   # Meta-analysis of the total OE ratio
   #######################################################################################
-  if (measure=="OE") {
+  if (measure == "OE") {
     if (verbose) message("Extracting/computing estimates of the total O:E ratio ...")
     
     out$model <- pars.default$model.oe
@@ -583,8 +532,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
         out$pi.lb <- ifelse(method=="FE", ci.lb, predint$lower)
         out$pi.ub <- ifelse(method=="FE", ci.ub, predint$upper)
         
-        if (ret.fit)
-          out$fit <- fit
+        out$fit <- fit
 
         out$numstudies <- fit$k
       } else if (pars.default$model.oe=="normal/log") {
@@ -602,8 +550,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
         out$pi.lb  <- ifelse(method=="FE", exp(ci.lb), exp(predint$lower))
         out$pi.ub  <- ifelse(method=="FE", exp(ci.lb), exp(predint$upper))
         
-        if (ret.fit)
-          out$fit <- fit
+        out$fit <- fit
         
         out$numstudies <- fit$k
       } else if (pars.default$model.oe=="poisson/log") { 
@@ -626,134 +573,43 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
           out$pi.lb  <- exp(predint$lower)
           out$pi.ub  <- exp(predint$upper)
           
-          if (ret.fit)
-            out$fit <- fit
+          out$fit <- fit
           
           out$numstudies <- nobs(fit)
-        } else if (method=="FE") { #one-stage fixed-effects meta-analysis
-          fit <- glm(O~1, offset=log(E), family=poisson(link="log"), data=ds)
-          preds.ci <- confint(fit, level=pars.default$level, quiet=!verbose, ...)
+        } else if (method == "FE") { #one-stage fixed-effects meta-analysis
+          fit <- glm(O~1, offset = log(E), family = poisson(link = "log"), data = ds)
+          preds.ci <- confint(fit, level = pars.default$level, quiet = !verbose, ...)
           
           out$est   <- as.numeric(exp(coefficients(fit)))
           out$ci.lb <- out$pi.lb <- exp(preds.ci[1])
           out$ci.ub <- out$pi.ub <- exp(preds.ci[2])
           
-          if (ret.fit)
-            out$fit <- fit
+          out$fit <- fit
           
           out$numstudies <- nobs(fit)
         } else {
-          stop(paste("No implementation found for ", method, " estimation (model '", pars.default$model.oe, "')!", sep=""))
+          stop(paste("No implementation found for ", method, " estimation (model '", pars.default$model.oe, "')!", sep = ""))
         }
       } else {
         stop("Model not implemented yet!")
       }
     } else {
-      if(verbose) print("Performing Bayesian one-stage meta-analysis...")
+      if (verbose) print("Performing Bayesian one-stage meta-analysis...")
+      bayesma <- run_Bayesian_MA_oe(ds, pars = pars.default, n.chains = n.chains, verbose = verbose, ...)
       
       out$model <- "hierarchical related regression"
-        
-      # Truncate hyper parameter variance
-      pars.default$hp.mu.var = min(pars.default$hp.mu.var, 100)
-      
-      # Select studies where we have info on O, E and N
-      i.select1 <- which(!is.na(ds$O) & !is.na(ds$E) & !is.na(ds$N))
-      
-      # Select studies where we only have info on O and E
-      i.select2 <- which(!is.na(ds$O) & !is.na(ds$E) & is.na(ds$N))
-      
-      # Select studies where we have (estimated) information on log(OE) and its standard error
-      i.select3 <- which(!is.na(ds$theta) & !is.na(ds$theta.se) & is.na(ds$O) & is.na(ds$E))
-      
-      mvmeta_dat <- list(O=ds$O, E=ds$E)
-      
-      if (length(i.select1)>0) {
-        mvmeta_dat$s1 <- i.select1
-        mvmeta_dat$N <- ds$N
-      }
-      if (length(i.select2)>0)
-        mvmeta_dat$s2 <- i.select2
-      if (length(i.select3)>0) {
-        mvmeta_dat$s3 <- i.select3
-        mvmeta_dat$logOE <- ds$theta
-        mvmeta_dat$logOE.se <- ds$theta.se
-      }
-      
-      # Generate model
-      model <- generateBUGS.OE.discrete(N.type1=length(i.select1), 
-                                        N.type2=length(i.select2),
-                                        N.type3=length(i.select3),
-                                        pars=pars.default, ...)
-      
-      out$numstudies <- length(c(i.select1, i.select2, i.select3))
-     
-      
-      
-      # Generate initial values from the relevant distributions
-      model.pars <- list()
-      model.pars[[1]] <- list(param="mu.logoe", param.f=rnorm, param.args=list(n=1, mean=pars.default$hp.mu.mean, sd=sqrt(pars.default$hp.mu.var)))
-      
-      if (pars.default$hp.tau.dist=="dunif") {
-        model.pars[[2]] <- list(param="bsTau", param.f=runif, 
-                                param.args=list(n=1, min=pars.default$hp.tau.min, 
-                                                max=pars.default$hp.tau.max))
-      } else if (pars.default$hp.tau.dist=="dhalft") {
-        model.pars[[2]] <- list(param="bsTau", param.f=rstudentt, 
-                                param.args=list(n=1, mean=pars.default$hp.tau.mean, 
-                                                sigma=pars.default$hp.tau.sigma, 
-                                                df=pars.default$hp.tau.df,
-                                                lower=pars.default$hp.tau.min, 
-                                                upper=pars.default$hp.tau.max))
-      } else {
-        stop("Invalid distribution for 'hp.tau.dist'!")
-      }
-      
-      inits <- generateMCMCinits(n.chains=n.chains, model.pars=model.pars)
-      
-      jags.model <- runjags::run.jags(model=model, 
-                                      monitor = c("mu.logoe", "mu.oe", "pred.oe", "bsTau", "PED"), 
-                                      data = mvmeta_dat, 
-                                      n.chains = n.chains,
-                                      confidence = out$level, # Which credibility intervals do we need?
-                                      silent.jags = !verbose,
-                                      inits=inits,
-                                      ...)
-      # cat(paste("\nPenalized expected deviance: ", round(x$PED,2), "\n"))
-      
-      # Check convergence
-      psrf.ul <-  jags.model$psrf$psrf[,2]
-      psrf.target <- jags.model$psrf$psrf.target
-      
-      if(sum(psrf.ul > psrf.target)>0) {
-        warning(paste("Model did not properly converge! The upper bound of the convergence diagnostic (psrf) exceeds", 
-                      psrf.target, "for the parameters", 
-                      paste(rownames(jags.model$psrf$psrf)[which(psrf.ul > psrf.target)], " (psrf=", 
-                            round(jags.model$psrf$psrf[which(psrf.ul > psrf.target),2],2), ")", collapse=", ", sep=""),
-                        ". Consider re-running the analysis by increasing the optional arguments 'adapt', 'burnin' and/or 'sample'."  ))
-      }
-
-        
-      fit <- jags.model$summaries
-      
-
-      #Extract PED
-      fit.dev <- runjags::extract(jags.model,"PED")
-      txtLevel <- (out$level*100)
-      
-      out$est   <- fit["mu.oe", "Median"]
-      out$ci.lb <- fit["mu.oe", paste("Lower", txtLevel, sep="")]
-      out$ci.ub <- fit["mu.oe", paste("Upper", txtLevel, sep="")]
-      out$pi.lb <- fit["pred.oe", paste("Lower", txtLevel, sep="")]
-      out$pi.ub <- fit["pred.oe", paste("Upper", txtLevel, sep="")]
-      
-      if (ret.fit)
-        out$fit <- jags.model
-      
-      out$PED <- sum(fit.dev$deviance)+sum(fit.dev$penalty)
+      out$numstudies  <- bayesma$numstudies
+      out$est    <- bayesma$est
+      out$ci.lb  <- bayesma$ci.lb
+      out$ci.ub  <- bayesma$ci.ub
+      out$pi.lb  <- bayesma$pi.lb
+      out$pi.ub  <- bayesma$pi.ub
+      out$PED <- bayesma$PED
+      out$fit <- bayesma$fit
     }
     
     if ("Study" %in% colnames(ds)) {
-      ds <- ds[,-which(colnames(ds)=="Study")]
+      ds <- ds[,-which(colnames(ds) == "Study")]
     }
     
     out$data <- ds
@@ -778,19 +634,22 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
   out <- paste(out, " }\n")
   out <- paste(out, " bsprec <- 1/(bsTau*bsTau)\n")
   
-  if (pars$hp.tau.dist=="dunif") {
-    out <- paste(out, "  bsTau ~ dunif(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep="") 
-  } else if (pars$hp.tau.dist=="dhalft") {
-    out <- paste(out, "  bsTau ~ dt(", pars$hp.tau.mean," ,", hp.tau.prec, ",", pars$hp.tau.df, ")T(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep="") 
+  if (pars$hp.tau.dist == "dunif") {
+    out <- paste(out, "  bsTau ~ dunif(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep = "") 
+    out <- paste(out, "  prior_bsTau ~ dunif(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep = "")
+  } else if (pars$hp.tau.dist == "dhalft") {
+    out <- paste(out, "  bsTau ~ dt(", pars$hp.tau.mean," ,", hp.tau.prec, ",", pars$hp.tau.df, ")T(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep = "") 
+    out <- paste(out, "  prior_bsTau ~ dt(", pars$hp.tau.mean," ,", hp.tau.prec, ",", pars$hp.tau.df, ")T(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep = "")
   } else {
     stop("Specified prior not implemented")
   }
   
   if (pars$model.cstat  == "normal/logit") {
-    out <- paste(out, "  mu.tobs ~ dnorm(", pars$hp.mu.mean, ",", hp.mu.prec, ")\n", sep="")
-    out <- paste(out, "  mu.obs <- 1/(1+exp(-mu.tobs))\n", sep="")
-    out <- paste(out, "  pred.obs <- 1/(1+exp(-pred.tobs))\n", sep="")
-    out <- paste(out, "  pred.tobs ~ dnorm(mu.tobs, bsprec)\n", sep="")
+    out <- paste(out, "  mu.tobs ~ dnorm(", pars$hp.mu.mean, ",", hp.mu.prec, ")\n", sep = "")
+    out <- paste(out, "  prior_mu ~ dnorm(", pars$hp.mu.mean, ",", hp.mu.prec, ")\n", sep = "")
+    out <- paste(out, "  mu.obs <- 1/(1+exp(-mu.tobs))\n", sep = "")
+    out <- paste(out, "  pred.obs <- 1/(1+exp(-pred.tobs))\n", sep = "")
+    out <- paste(out, "  pred.tobs ~ dnorm(mu.tobs, bsprec)\n", sep = "")
   } else {
     stop("Specified link function not implemented")
   }
@@ -838,12 +697,13 @@ print.valmeta <- function(x, ...) {
 #' intervals. A polygon is added to the bottom of the forest plot, showing the summary estimate based on the model. 
 #' A 95\% prediction interval is added by default for random-effects models,  the dotted line indicates its (approximate) bounds.
 #' 
-#' @references \itemize{
-#' \item Debray TPA, Damen JAAG, Snell KIE, Ensor J, Hooft L, Reitsma JB, et al. A guide to systematic review 
+#' @references 
+#' Debray TPA, Damen JAAG, Snell KIE, Ensor J, Hooft L, Reitsma JB, et al. A guide to systematic review 
 #' and meta-analysis of prediction model performance. \emph{BMJ}. 2017;356:i6460.
-#' \item Lewis S, Clarke M. Forest plots: trying to see the wood and the trees. \emph{BMJ}. 2001; 322(7300):1479--80.
-#' \item Riley RD, Higgins JPT, Deeks JJ. Interpretation of random effects meta-analyses. \emph{BMJ}. 2011 342:d549--d549.
-#' }
+#' 
+#' Lewis S, Clarke M. Forest plots: trying to see the wood and the trees. \emph{BMJ}. 2001; 322(7300):1479--80.
+#' 
+#' Riley RD, Higgins JPT, Deeks JJ. Interpretation of random effects meta-analyses. \emph{BMJ}. 2011 342:d549--d549.
 #' 
 #' @examples 
 #' data(EuroSCORE)
@@ -863,7 +723,6 @@ print.valmeta <- function(x, ...) {
 #' @method plot valmeta
 #' @export
 plot.valmeta <- function(x,  ...) {
-  k <- dim(x$data)[1]
   yi.slab <- c(as.character(x$slab))
   yi <- c(x$data[,"theta"])
   ci.lb <- c(x$data[,"theta.cilb"])
@@ -926,6 +785,98 @@ plot.valmeta <- function(x,  ...) {
   return(pars.default)
 }
 
+#' Plot Parameter Density
+#' 
+#' Function to generate plots of the prior and posterior density of a Bayesian meta-analysis.
+#' 
+#' @param x An object of class \code{"valmeta"}
+#' @param par Character string to specify for which parameter a plot should be generated. Choices are \code{'mu'} 
+#' (mean of the random effects model) and \code{'tau'} (standard deviation of the random effects model).
+#' @param type Character string to specify whether the prior (\code{'prior}) or posterior distribution (\code{'posterior}) 
+#' should be displayed.
+#' @param \ldots Additional arguments which are passed to \link{forest}.
+#' 
+#' @references 
+#' Debray TPA, Damen JAAG, Snell KIE, Ensor J, Hooft L, Reitsma JB, et al. A guide to systematic review 
+#' and meta-analysis of prediction model performance. \emph{BMJ}. 2017;356:i6460.
+#' 
+#' @examples 
+#' \dontrun{
+#' data(EuroSCORE)
+#' fit <- valmeta(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl,
+#'                cstat.ciub=c.index.95CIu, N=n, O=n.events, 
+#'                data=EuroSCORE, method="BAYES", slab=Study)
+#' density(fit)
+#' density(fit, type = "posterior")
+#' density(fit, par = "tau", type = "prior")
+#' 
+#' # Meta-analysis of the O:E ratio
+#' EuroSCORE.new <- EuroSCORE
+#' EuroSCORE.new$n[c(1, 2, 5, 10, 20)] <-  NA
+#' pars <- list(hp.tau.dist="dhalft",   # Prior for the between-study standard deviation
+#'              hp.tau.sigma=1.5,       # Standard deviation for 'hp.tau.dist'
+#'              hp.tau.df=3,            # Degrees of freedom for 'hp.tau.dist'
+#'              hp.tau.max=10)          # Maximum value for the between-study standard deviation
+#' fit2 <- valmeta(measure="OE", O=n.events, E=e.events, N=n, data=EuroSCORE.new,
+#'                 method="BAYES", slab=Study, pars=pars)
+#' density(fit2, type = "prior")
+#' } 
+#' 
+#' @keywords meta-analysis density
+#'             
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' 
+#' @return An object of class \code{ggplot}
+#' 
+#' @method density valmeta
+#' @export
+density.valmeta <- function(x, par, type, ...) {
+  if (!("runjags" %in% class(x$fit))) {
+    stop("Not a Bayesian analysis!")
+  }
+  if (!requireNamespace("ggmcmc", quietly = TRUE)) {
+    stop("The package 'ggmcmc' is currently not installed!")
+  } 
+  if (missing(par) & missing(type)) {
+    P <- data.frame(
+      Parameter = c("prior_mu", "mu.tobs", "prior_bsTau", "bsTau"),
+      Label = c("a) Prior density of the (transformed) meta-analysis mean", 
+                "b) Posterior density of the (transformed) meta-analysis mean", 
+                "c) Prior density of the between-study standard deviation",
+                "d) Posterior density of the between-study standard deviation"))
+  } else if (missing(par) & type == "posterior") {
+    P <- data.frame(
+      Parameter = c("mu.tobs", "bsTau"),
+      Label = c("Posterior density of the (transformed) meta-analysis mean", "Posterior density of the between-study standard deviation"))
+  } else if (missing(par) & type == "prior") {
+    P <- data.frame(
+      Parameter = c("prior_mu", "prior_bsTau"),
+      Label = c("Prior density of the (transformed) meta-analysis mean", "Prior density of the between-study standard deviation"))
+  }else if (par == "mu" & type == "posterior") {
+    P <- data.frame(
+      Parameter = c("mu.tobs"),
+      Label = c("Posterior density of the (transformed) meta-analysis mean"))
+  } else if (par == "mu" & type == "prior") {
+    P <- data.frame(
+      Parameter = c("prior_mu"),
+      Label = c("Prior density of the (transformed) meta-analysis mean"))
+  } else if (par == "tau" & type == "posterior") {
+    P <- data.frame(
+      Parameter = c("bsTau"),
+      Label = c("Posterior density of the between-study standard deviation"))
+  } else if (par == "tau" & type == "prior") {
+    P <- data.frame(
+      Parameter = c("prior_bsTau"),
+      Label = c("Prior density of the between-study standard deviation"))
+  } else {
+    stop("Invalid combination of 'par' and 'type'")
+  }
+  
+  S <- ggmcmc::ggs(x$fit$mcmc, par_labels = P, sort = FALSE)
+  S <- subset(S, S$ParameterOriginal %in% P$Parameter)
+
+  ggmcmc::ggs_density(S)
+}
 
 
 

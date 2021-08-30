@@ -43,7 +43,6 @@
 #' @param test Optional character string specifying how test statistics and confidence intervals for the fixed effects 
 #' should be computed. By default (\code{test="knha"}), the method by Knapp and Hartung (2003) is used for 
 #' adjusting test statistics and confidence intervals. Type '\code{?rma}' for more details.
-#' @param ret.fit logical indicating whether the full results from the fitted model should also be returned.
 #' @param verbose If TRUE then messages generated during the fitting process will be displayed.
 #' @param slab Optional vector specifying the label for each study
 #' @param n.chains Optional numeric specifying the number of chains to use in the Gibbs sampler 

@@ -140,6 +140,11 @@ and evaluating clinical prediction models in an individual participant data meta
 
 de Jong VMT, Moons KGM, Eijkemans MJC, Riley RD, Debray TPA. Developing more generalizable prediction models from pooled 
 studies and large clustered data sets. \emph{Stat Med}. 2021;40(15):3533--59.
+
+Riley RD, Tierney JF, Stewart LA. Individual participant data meta-analysis: a handbook for healthcare research. 
+Hoboken, NJ: Wiley; 2021. ISBN: 978-1-119-33372-2.
+
+Schmid CH, Stijnen T, White IR. Handbook of meta-analysis. First edition. Boca Raton: Taylor and Francis; 2020. ISBN: 978-1-315-11940-3.
 }
 \seealso{
 \code{\link{forest.metapred}}  for generating a forest plot of prediction model performance
