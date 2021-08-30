@@ -489,10 +489,10 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
     
     if (out$model == "normal/identity") {
       g <- NULL
-    } else if (out$model=="normal/log" |  out$model=="poisson/log") {
+    } else if (out$model == "normal/log" |  out$model == "poisson/log") {
       g <- "log(OE)"
     } else {
-      stop (paste("Meta-analysis model currently not supported: '", out$model, '"', sep=""))
+      stop(paste("Meta-analysis model currently not supported: '", out$model, '"', sep = ""))
     }
     
     ds <- oecalc(OE = OE, OE.se = OE.se,
@@ -507,34 +507,37 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
                  Po = Po,
                  Po.se = Po.se,
                  Pe = Pe, 
-                 slab=slab, g=g, level=pars.default$level) 
+                 slab = slab, g = g, level = pars.default$level) 
 
     ## Assign study labels
     out$slab <- rownames(ds)
     
     ## Initial guess for number of studies in the meta-analysis
-    out$numstudies <- length(which(rowMeans(!is.na(ds))==1))
+    out$numstudies <- length(which(rowMeans(!is.na(ds)) == 1))
       
     if (method != "BAYES") { # Use of rma
       
-      if (pars.default$model.oe=="normal/identity") {
-        if(verbose) print("Performing two-stage meta-analysis...")
-        fit <- rma(yi=ds$theta, sei=ds$theta.se, data=ds, method=method, test=test, slab=out$slab, ...) 
-        preds <- predict(fit, level=pars.default$level)
+      if (pars.default$model.oe == "normal/identity") {
+        if (verbose) print("Performing two-stage meta-analysis...")
+        fit <- rma(yi = ds$theta, sei = ds$theta.se, data = ds, method = method, test = test, slab = out$slab, ...) 
+        preds <- predict(fit, level = pars.default$level)
         
         # The predict function from metafor uses a Normal distribution for prediction intervals, 
         # Here, we will use a Student T distribution instead
-        predint <- calcPredInt(coefficients(fit), sigma2=fit$se**2, tau2=fit$tau2, k=fit$k, level=pars.default$level)
+        predint <- calcPredInt(coefficients(fit), 
+                               sigma2 = fit$se**2, 
+                               tau2 = fit$tau2, 
+                               k = fit$k, 
+                               level = pars.default$level)
         
         out$est   <- as.numeric(coefficients(fit))
         out$ci.lb <- as.numeric(preds$ci.lb)
         out$ci.ub <- as.numeric(preds$ci.ub)
-        out$pi.lb <- ifelse(method=="FE", ci.lb, predint$lower)
-        out$pi.ub <- ifelse(method=="FE", ci.ub, predint$upper)
-        
+        out$pi.lb <- ifelse(method == "FE", ci.lb, predint$lower)
+        out$pi.ub <- ifelse(method == "FE", ci.ub, predint$upper)
         out$fit <- fit
-
         out$numstudies <- fit$k
+        
       } else if (pars.default$model.oe=="normal/log") {
         if(verbose) print("Performing two-stage meta-analysis...")
         fit <- rma(yi=ds$theta, sei=ds$theta.se, data=ds, method=method, test=test, slab=out$slab, ...) 
@@ -785,26 +788,24 @@ plot.valmeta <- function(x,  ...) {
   return(pars.default)
 }
 
-#' Plot the distribution of meta-analysis model parameters
+#' Plot the prior and posterior distribution of a meta-analysis model
 #' 
 #' Function to generate plots for the prior and posterior distribution of a Bayesian meta-analysis.
 #' 
 #' @param x An object of class \code{"valmeta"}
-#' @param par Character string to specify for which parameter a plot should be generated. Choices are \code{'mu'} 
-#' (mean of the random effects model) and \code{'tau'} (standard deviation of the random effects model).
-#' @param distr_type Character string to specify whether the prior (\code{'prior'}) or posterior distribution (\code{'posterior'}) 
-#' should be displayed.
-#' @param plot_type Character string to specify whether a density plot (\code{'dens'}) or histogram (\code{'hist'}) 
-#' should be displayed.
+#' @param par Character string to specify for which parameter a plot should be generated. Options are \code{"mu"} 
+#' (mean of the random effects model) and \code{"tau"} (standard deviation of the random effects model).
+#' @param distr_type Character string to specify whether the prior distribution (\code{"prior"}) or 
+#' posterior distribution (\code{"posterior"}) should be displayed.
+#' @param plot_type Character string to specify whether a density plot (\code{"dens"}) or 
+#' histogram (\code{"hist"}) should be displayed.
 #' @param \ldots Additional arguments which are currently not used
-#' 
-#' @references 
-#' Debray TPA, Damen JAAG, Snell KIE, Ensor J, Hooft L, Reitsma JB, et al. A guide to systematic review 
-#' and meta-analysis of prediction model performance. \emph{BMJ}. 2017;356:i6460.
 #' 
 #' @examples 
 #' \dontrun{
 #' data(EuroSCORE)
+#' 
+#' # Meta-analysis of the concordance statistic
 #' fit <- valmeta(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl,
 #'                cstat.ciub=c.index.95CIu, N=n, O=n.events, 
 #'                data=EuroSCORE, method="BAYES", slab=Study)
@@ -853,7 +854,7 @@ dplot.valmeta <- function(x, par, distr_type, plot_type = "dens", ...) {
     P <- data.frame(
       Parameter = c("prior_mu", "prior_bsTau"),
       Label = c("Prior distribution of the (transformed) meta-analysis mean", "Prior distribution of the between-study standard deviation"))
-  }else if (par == "mu" & distr_type == "posterior") {
+  } else if (par == "mu" & distr_type == "posterior") {
     P <- data.frame(
       Parameter = c("mu.tobs"),
       Label = c("Posterior distribution of the (transformed) meta-analysis mean"))
@@ -861,14 +862,10 @@ dplot.valmeta <- function(x, par, distr_type, plot_type = "dens", ...) {
     P <- data.frame(
       Parameter = c("prior_mu"),
       Label = c("Prior distribution of the (transformed) meta-analysis mean"))
-  } else if (par == "tau" & distr_type == "posterior") {
+  } else if (par == "tau") {
     P <- data.frame(
-      Parameter = c("bsTau"),
-      Label = c("Posterior distribution of the between-study standard deviation"))
-  } else if (par == "tau" & distr_type == "prior") {
-    P <- data.frame(
-      Parameter = c("prior_bsTau"),
-      Label = c("Prior distribution of the between-study standard deviation"))
+      Parameter = ifelse(distr_type == "posterior", "bsTau", "prior_bsTau"),
+      Label = paste(ifelse(distr_type == "posterior", "Posterior", "Prior"), "distribution of the between-study standard deviation"))
   } else {
     stop("Invalid combination of 'par' and 'distr_type'")
   }
