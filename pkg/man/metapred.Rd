@@ -88,8 +88,9 @@ A list of class \code{metapred}, containing the final model in \code{global.mode
 tree of estimates of the coefficients, performance measures, generalizability measures in \code{stepwise}.
 }
 \description{
-Generalized stepwise regression for obtaining a prediction model with adequate performance across data sets. Requires
-data from individuals in multiple studies.
+Generalized stepwise regression for obtaining a prediction model that is validated 
+with (stepwise) internal-external cross-validation, in or to obtain adequate 
+performance across data sets. Requires data from individuals in multiple studies.
 }
 \details{
 Use \link{subset.metapred} to obtain an individual prediction model from a \code{metapred} object.
@@ -136,6 +137,9 @@ fitted <- predict(fit, newdata = newdat)
 Debray TPA, Moons KGM, Ahmed I, Koffijberg H, Riley RD. A framework for developing, implementing, 
 and evaluating clinical prediction models in an individual participant data meta-analysis. 
 \emph{Stat Med}. 2013;32(18):3158-80.
+
+de Jong VMT, Moons KGM, Eijkemans MJC, Riley RD, Debray TPA. Developing more generalizable prediction models from pooled 
+studies and large clustered data sets. \emph{Stat Med}. 2021;40(15):3533--59.
 }
 \seealso{
 \code{\link{forest.metapred}}  for generating a forest plot of prediction model performance

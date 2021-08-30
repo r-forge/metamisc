@@ -65,24 +65,24 @@ auc <- AUC <- AUROC <-  function(p, y, ...) {
   pROC::auc(response = y, predictor = p)
 }
 
-calibration.intercept <- cal.int <- function(p, y, estFUN, family, ...)
-  pred.recal(p = p, y = y, estFUN = estFUN, family = family, which = "intercept")
+calibration.intercept <- cal.int <- function(p, y, estFUN, family, w = NULL, ...)
+  pred.recal(p = p, y = y, estFUN = estFUN, family = family, which = "intercept", weights = w)
 
-bin.cal.int <- function(p, y, ...)
-  pred.recal(p = p, y = y, estFUN = "glm", family = binomial, which = "intercept")
+bin.cal.int <- function(p, y, w = NULL, ...)
+  pred.recal(p = p, y = y, estFUN = "glm", family = binomial, which = "intercept", weights = w)
 
 # Slope.only is a trick to make this functin work for metapred.
 # Slope.only should otherwise always be false! Also: this messes up the variances,
 # making meta-analysis impossible!
 # multiplicative slope!
-calibration.slope <- cal.slope <- function(p, y, estFUN, family, slope.only = TRUE, ...) {
+calibration.slope <- cal.slope <- function(p, y, estFUN, family, slope.only = TRUE, w = NULL, ...) {
   # refit <- pred.recal(p = p, y = y, estFUN = estFUN, family = family, which = "slope")
   # if (slope.only) {
   #   refit[[1]] <- refit[[1]][[2]]
   # }
   # refit
   
-  refit <- pred.recal(p = p, y = y, estFUN = estFUN, family = family, which = "slope")
+  refit <- pred.recal(p = p, y = y, estFUN = estFUN, family = family, which = "slope", weights = w)
   if (slope.only) {
     refit$estimate <- refit[[1]] <- refit[[1]][2]
     refit$variances <- variances(refit)[2]
@@ -92,9 +92,9 @@ calibration.slope <- cal.slope <- function(p, y, estFUN, family, slope.only = TR
 }
 
 # additive slope!
-calibration.add.slope <- cal.add.slope <- function(p, y, estFUN, family, slope.only = TRUE, ...)  {
+calibration.add.slope <- cal.add.slope <- function(p, y, estFUN, family, slope.only = TRUE, w = NULL, ...)  {
   
-  refit <- pred.recal(p = p, y = y, estFUN = estFUN, family = family, which = "add.slope")
+  refit <- pred.recal(p = p, y = y, estFUN = estFUN, family = family, which = "add.slope", weights = w)
   if (slope.only) {
     refit$estimate <- refit[[1]] <- refit[[1]][2]
     refit$variances <- variances(refit)[2]
@@ -108,8 +108,10 @@ calibration.add.slope <- cal.add.slope <- function(p, y, estFUN, family, slope.o
 # bs.n integer number of bootstrap samples
 # ... Compatiblility only
 # For asymptotic, see https://journals.ametsoc.org/doi/full/10.1175/2007WAF2007049.1
-mse <- brier <- mse.with.se <- function(p, y, se.method = "asymptotic", bs.n = 10000, ...) {
+# w weights. Note that se.method must be bootstrap when w = NULL. 
+mse <- brier <- mse.with.se <- function(p, y, se.method = "asymptotic", bs.n = 10000, w = NULL, ...) {
   er <- p - y
+  if (!is.null(w)) er <- er * w
   est <- mean(er^2)
   out <- data.frame(estimate = est, se = NA, variances = NA)
   out$n <- n <- length(p)
@@ -121,6 +123,8 @@ mse <- brier <- mse.with.se <- function(p, y, se.method = "asymptotic", bs.n = 1
     out$se <- sd(ses)
     out$variances <- out$se^2
   } else if (se.method == "asymptotic") {
+    if (length(w) > 1)
+      stop('se.method == "asymptotic" cannot be used when weights w are supplied.')
     out$variances <- var(er^2)/n
     out$se <- sqrt(out$variances)
   }
@@ -201,9 +205,32 @@ get_confint <- function(object, level = 0.95, ...) {
 # p Numeric vector, 0 <= p <= 1, predicted probability under the model
 # y observed outcome, 0 or FALSE is no outcome, >= 1 or TRUE is outcome
 # na.rm logical. should missing values be removed?
-bin.ll <- function(p, y, na.rm = TRUE)
-  sum(log(p[y]), na.rm = na.rm) + sum(log(1 - p[-y]), na.rm = na.rm)
+bin.ll <- function(p, y, na.rm = TRUE, w = NULL) {
+  if (is.null(w)) w <- 1
+  sum(log(w*p[y]), na.rm = na.rm) + sum(log(w*(1 - p[-y])), na.rm = na.rm)
+}
 
+
+
+# Observed expected ratio
+# default se method assumes variance of p is zero
+# default or faris / bias-corrected
+oe.ratio <- function(p, y, na.rm = TRUE, se.method = "default", w = NULL) {
+  if (is.null(w)) w <- 1
+  mean_p <- mean(p * w, na.rm = na.rm)
+  est <- mean(y * w, na.rm = na.rm) / mean_p
+  out <- data.frame(estimate = est, se = NA, variances = NA)
+  
+  if (se.method == "default") {
+    out$se <- 1 / mean_p * sqrt(sum(p * (1-p)^2))
+    if (length(w) > 1)
+      warning('se.method for oe.ratio does not account for weights w.')
+  } else if (se.method == "faris" || se.method == "bias-corrected")
+    stop("Faris' bias-correction is not implemented yet")
+  
+  out$variances <- out$se^2
+  out
+}
 
 ############################## Heterogeneity, generalizability, pooled performance functions ###############################
 # ### By convention, all generalizability measures:

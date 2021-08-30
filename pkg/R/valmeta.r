@@ -127,10 +127,11 @@
 #' Debray TPA, Damen JAAG, Snell KIE, Ensor J, Hooft L, Reitsma JB, et al. A guide to systematic review and meta-analysis 
 #' of prediction model performance. \emph{BMJ}. 2017;356:i6460.
 #' 
-#' Debray TPA, Damen JAAG, Riley R, Snell KIE, Reitsma JB, Hooft L, et al. A framework for meta-analysis of prediction model studies with binary and time-to-event outcomes. \emph{Stat Methods Med Res}. 2019 Sep;28(9):2768--86. 
+#' Debray TPA, Damen JAAG, Riley R, Snell KIE, Reitsma JB, Hooft L, et al. A framework for meta-analysis of prediction model studies 
+#' with binary and time-to-event outcomes. \emph{Stat Methods Med Res}. 2019 Sep;28(9):2768--86. 
 #' 
 #' Steyerberg EW, Nieboer D, Debray TPA, van Houwelingen HC. Assessment of heterogeneity in an individual participant
-#' data meta-analysis of prediction models: An overview and illustration. \emph{Stat Med}. 2019; In press.
+#' data meta-analysis of prediction models: An overview and illustration. \emph{Stat Med}. 2019;38(22):4290--309.
 #' 
 #' Viechtbauer W. Conducting Meta-Analyses in R with the metafor Package. \emph{Journal of Statistical Software}. 
 #' 2010; 36(3). Available from: \url{https://www.jstatsoft.org/v36/i03/}
@@ -793,7 +794,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
   } else {
     stop("Specified link function not implemented")
   }
-  out <- paste(out, "}", sep="")
+  out <- paste(out, "}", sep = "")
   
   return(out)
 }
@@ -803,17 +804,23 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
 #' @export
 print.valmeta <- function(x, ...) {
   text.stat <- attr(x$data,'estimand')
-  text.model <- if (x$method=="FE") "Fixed" else "Random"
-  text.ci <- if(x$method=="BAYES") "credibility" else "confidence"
-  text.pi <- if(x$method=="BAYES") "" else "(approximate)"
+  text.ci <- if (x$method == "BAYES") "credibility" else "confidence"
+  text.pi <- if (x$method == "BAYES") "" else "(approximate)"
   
-  
-  if (x$method!="FE") {
-    cat(paste("Summary ", text.stat, " with ", x$level*100, "% ", text.ci, " and ", text.pi, " ", x$level*100, "% prediction interval:\n\n", sep=""))
-    results <- c(Estimate=x$est, CIl=x$ci.lb, CIu=x$ci.ub, PIl=x$pi.lb, PIu=x$pi.ub)
+  if (x$method != "FE") {
+    cat(paste("Random effects summary ", text.stat, 
+              " with ", x$level*100, "% ", text.ci, 
+              " and ", text.pi, " ", x$level*100, "% prediction interval:\n\n", sep = ""))
+    results <- c(Estimate = x$est, 
+                 CIl = x$ci.lb, 
+                 CIu = x$ci.ub, 
+                 PIl = x$pi.lb, 
+                 PIu = x$pi.ub)
   } else {
-    cat(paste("Summary ", text.stat, " with ", x$level*100, "% ", text.ci, " interval:\n\n", sep=""))
-    results <- c(Estimate=x$est, CIl=x$ci.lb, CIu=x$ci.ub)
+    cat(paste("Fixed effect summary ", text.stat, " with ", x$level*100, "% ", text.ci, " interval:\n\n", sep = ""))
+    results <- c(Estimate = x$est, 
+                 CIl = x$ci.lb, 
+                 CIu = x$ci.ub)
   }
   print(results)
   cat("\n")
@@ -863,7 +870,7 @@ plot.valmeta <- function(x,  ...) {
   ci.ub <- c(x$data[,"theta.ciub"])
   
   # Back-transform the raw data
-  if (x$model=="normal/logit") {
+  if (x$model == "normal/logit") {
     yi <- sapply(yi, inv.logit)
     ci.lb <- sapply(ci.lb, inv.logit)
     ci.ub <- sapply(ci.ub, inv.logit)
@@ -901,7 +908,7 @@ plot.valmeta <- function(x,  ...) {
                        hp.tau.dist = "dunif", 
                        hp.tau.df = 3, 
                        correction = 0.5,
-                       method.restore.c.se=4,
+                       method.restore.c.se = 4,
                        model.cstat = "normal/logit", #Alternative: "normal/identity"
                        model.oe = "normal/log") #Alternative: "poisson/log" or "normal/identity"
   
@@ -913,7 +920,7 @@ plot.valmeta <- function(x,  ...) {
   }
   
   if (pars.default$level < 0 | pars.default$level > 1) {
-    stop ("Invalid value for 'level'!")
+    stop("Invalid value for 'level'!")
   } 
   
   return(pars.default)
