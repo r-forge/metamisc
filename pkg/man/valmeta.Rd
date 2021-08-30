@@ -260,7 +260,7 @@ Viechtbauer W. Conducting Meta-Analyses in R with the metafor Package. \emph{Jou
 \seealso{
 \code{\link{ccalc}} to calculate concordance statistics and corresponding standard errors, \code{\link{oecalc}} to 
 calculate the total O:E ratio and corresponding standard errors, \code{\link{plot.valmeta}} to generate forest plots, 
-\code{\link{density.valmeta}} to display prior and posterior density plots.
+\code{\link{dplot.valmeta}} to generate plots of the prior and posterior distribution.
 }
 \keyword{calibration}
 \keyword{discrimination}

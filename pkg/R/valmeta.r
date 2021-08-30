@@ -140,7 +140,7 @@
 #'   
 #' @seealso \code{\link{ccalc}} to calculate concordance statistics and corresponding standard errors, \code{\link{oecalc}} to 
 #' calculate the total O:E ratio and corresponding standard errors, \code{\link{plot.valmeta}} to generate forest plots, 
-#' \code{\link{density.valmeta}} to display prior and posterior density plots.
+#' \code{\link{dplot.valmeta}} to generate plots of the prior and posterior distribution.
 #' 
 #' @examples 
 #' ######### Validation of prediction models with a binary outcome #########
@@ -785,16 +785,18 @@ plot.valmeta <- function(x,  ...) {
   return(pars.default)
 }
 
-#' Plot density of estimated model parameters
+#' Plot the distribution of meta-analysis model parameters
 #' 
-#' Function to generate plots of the prior and posterior density of a Bayesian meta-analysis.
+#' Function to generate plots for the prior and posterior distribution of a Bayesian meta-analysis.
 #' 
 #' @param x An object of class \code{"valmeta"}
 #' @param par Character string to specify for which parameter a plot should be generated. Choices are \code{'mu'} 
 #' (mean of the random effects model) and \code{'tau'} (standard deviation of the random effects model).
-#' @param type Character string to specify whether the prior (\code{'prior}) or posterior distribution (\code{'posterior}) 
+#' @param distr_type Character string to specify whether the prior (\code{'prior'}) or posterior distribution (\code{'posterior'}) 
 #' should be displayed.
-#' @param \ldots Additional arguments which are passed to \link{forest}.
+#' @param plot_type Character string to specify whether a density plot (\code{'dens'}) or histogram (\code{'hist'}) 
+#' should be displayed.
+#' @param \ldots Additional arguments which are currently not used
 #' 
 #' @references 
 #' Debray TPA, Damen JAAG, Snell KIE, Ensor J, Hooft L, Reitsma JB, et al. A guide to systematic review 
@@ -806,9 +808,9 @@ plot.valmeta <- function(x,  ...) {
 #' fit <- valmeta(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl,
 #'                cstat.ciub=c.index.95CIu, N=n, O=n.events, 
 #'                data=EuroSCORE, method="BAYES", slab=Study)
-#' density(fit)
-#' density(fit, type = "posterior")
-#' density(fit, par = "tau", type = "prior")
+#' dplot(fit)
+#' dplot(fit, distr_type = "posterior")
+#' dplot(fit, par = "tau", distr_type = "prior")
 #' 
 #' # Meta-analysis of the O:E ratio
 #' EuroSCORE.new <- EuroSCORE
@@ -819,61 +821,66 @@ plot.valmeta <- function(x,  ...) {
 #'              hp.tau.max=10)          # Maximum value for the between-study standard deviation
 #' fit2 <- valmeta(measure="OE", O=n.events, E=e.events, N=n, data=EuroSCORE.new,
 #'                 method="BAYES", slab=Study, pars=pars)
-#' density(fit2, type = "prior")
+#' dplot(fit2, plot_type = "hist")
 #' } 
 #' 
-#' @keywords meta-analysis density
+#' @keywords meta-analysis density distribution
 #'             
 #' @author Thomas Debray <thomas.debray@gmail.com>
 #' 
 #' @return An object of class \code{ggplot}
 #' 
-#' @method density valmeta
 #' @export
-density.valmeta <- function(x, par, type, ...) {
+dplot.valmeta <- function(x, par, distr_type, plot_type = "dens", ...) {
   if (!("runjags" %in% class(x$fit))) {
     stop("Not a Bayesian analysis!")
   }
   if (!requireNamespace("ggmcmc", quietly = TRUE)) {
     stop("The package 'ggmcmc' is currently not installed!")
   } 
-  if (missing(par) & missing(type)) {
+  if (missing(par) & missing(distr_type)) {
     P <- data.frame(
       Parameter = c("prior_mu", "mu.tobs", "prior_bsTau", "bsTau"),
-      Label = c("a) Prior density of the (transformed) meta-analysis mean", 
-                "b) Posterior density of the (transformed) meta-analysis mean", 
-                "c) Prior density of the between-study standard deviation",
-                "d) Posterior density of the between-study standard deviation"))
-  } else if (missing(par) & type == "posterior") {
+      Label = c("a) Prior distribution of the (transformed) meta-analysis mean", 
+                "b) Posterior distribution of the (transformed) meta-analysis mean", 
+                "c) Prior distribution of the between-study standard deviation",
+                "d) Posterior distribution of the between-study standard deviation"))
+  } else if (missing(par) & distr_type == "posterior") {
     P <- data.frame(
       Parameter = c("mu.tobs", "bsTau"),
-      Label = c("Posterior density of the (transformed) meta-analysis mean", "Posterior density of the between-study standard deviation"))
-  } else if (missing(par) & type == "prior") {
+      Label = c("Posterior distribution of the (transformed) meta-analysis mean", "Posterior distribution of the between-study standard deviation"))
+  } else if (missing(par) & distr_type == "prior") {
     P <- data.frame(
       Parameter = c("prior_mu", "prior_bsTau"),
-      Label = c("Prior density of the (transformed) meta-analysis mean", "Prior density of the between-study standard deviation"))
-  }else if (par == "mu" & type == "posterior") {
+      Label = c("Prior distribution of the (transformed) meta-analysis mean", "Prior distribution of the between-study standard deviation"))
+  }else if (par == "mu" & distr_type == "posterior") {
     P <- data.frame(
       Parameter = c("mu.tobs"),
-      Label = c("Posterior density of the (transformed) meta-analysis mean"))
-  } else if (par == "mu" & type == "prior") {
+      Label = c("Posterior distribution of the (transformed) meta-analysis mean"))
+  } else if (par == "mu" & distr_type == "prior") {
     P <- data.frame(
       Parameter = c("prior_mu"),
-      Label = c("Prior density of the (transformed) meta-analysis mean"))
-  } else if (par == "tau" & type == "posterior") {
+      Label = c("Prior distribution of the (transformed) meta-analysis mean"))
+  } else if (par == "tau" & distr_type == "posterior") {
     P <- data.frame(
       Parameter = c("bsTau"),
-      Label = c("Posterior density of the between-study standard deviation"))
-  } else if (par == "tau" & type == "prior") {
+      Label = c("Posterior distribution of the between-study standard deviation"))
+  } else if (par == "tau" & distr_type == "prior") {
     P <- data.frame(
       Parameter = c("prior_bsTau"),
-      Label = c("Prior density of the between-study standard deviation"))
+      Label = c("Prior distribution of the between-study standard deviation"))
   } else {
-    stop("Invalid combination of 'par' and 'type'")
+    stop("Invalid combination of 'par' and 'distr_type'")
   }
   
   S <- ggmcmc::ggs(x$fit$mcmc, par_labels = P, sort = FALSE)
   S <- subset(S, S$ParameterOriginal %in% P$Parameter)
 
-  ggmcmc::ggs_density(S)
+  if (plot_type == "dens") {
+    ggmcmc::ggs_density(S)
+  } else if (plot_type == "hist") {
+    ggmcmc::ggs_histogram(S)
+  } else {
+    stop("Invalid plot type")
+  }
 }
