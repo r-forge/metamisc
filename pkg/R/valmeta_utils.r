@@ -72,8 +72,6 @@ calcPredInt <- function(x, sigma2, tau2, k, level = 0.95) {
 run_Bayesian_MA_oe <- function(x, pars, n.chains, verbose, ...) {
   
   # Truncate hyper parameter variance
-  if (pars$hp.mu.var > 100)
-    warning("Truncating the hyperprior value for 'hp.mu.var' to 100.")
   pars$hp.mu.var = min(pars$hp.mu.var, 100)
   
   # Select studies where we have info on O, E and N
@@ -402,7 +400,33 @@ plotCalibration <- function(predy, obsy, modelname="Model",
   #scatter <- scatter + ggMarginal(data = xy, x = "predy", y = "obsy", margins = "x", type="histogram", size=4)
   #scatter <- scatter + labs(x = "Predicted", y="Observed") 
   scatter
-  
-  
 }
-                                                                                                                               
+
+.initiateDefaultPars <- function(pars) {
+  pars.default <- list(level = 0.95,
+                       hp.mu.mean = 0, 
+                       hp.mu.var = 1E6,
+                       hp.tau.min = 0,
+                       hp.tau.max = 2,
+                       hp.tau.mean = 0,
+                       hp.tau.sigma = 0.5,
+                       hp.tau.dist = "dunif", 
+                       hp.tau.df = 3, 
+                       correction = 0.5,
+                       method.restore.c.se=4,
+                       model.cstat = "normal/logit", #Alternative: "normal/identity"
+                       model.oe = "normal/log") #Alternative: "poisson/log" or "normal/identity"
+  
+  if (!missing(pars)) {
+    for (i in 1:length(pars)) {
+      element <- ls(pars)[i]
+      pars.default[[element]] <- pars[[element]]
+    }
+  }
+  
+  if (pars.default$level < 0 | pars.default$level > 1) {
+    stop ("Invalid value for 'level'!")
+  } 
+  
+  return(pars.default)
+}

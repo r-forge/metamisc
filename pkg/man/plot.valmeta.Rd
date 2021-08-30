@@ -40,6 +40,11 @@ Lewis S, Clarke M. Forest plots: trying to see the wood and the trees. \emph{BMJ
 
 Riley RD, Higgins JPT, Deeks JJ. Interpretation of random effects meta-analyses. \emph{BMJ}. 2011 342:d549--d549.
 }
+\seealso{
+When a Bayesian meta-analysis was conducted, the prior and posterior distribution can be visualized using \code{\link{dplot.valmeta}}. 
+Further, the running means and the presence of autocorrelation can be inspected using \code{\link{rmplot.valmeta}} and, respectively, 
+\code{\link{acplot.valmeta}}.
+}
 \author{
 Thomas Debray <thomas.debray@gmail.com>
 }

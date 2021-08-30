@@ -2,21 +2,21 @@
 % Please edit documentation in R/valmeta.r
 \name{dplot.valmeta}
 \alias{dplot.valmeta}
-\title{Plot the distribution of meta-analysis model parameters}
+\title{Plot the prior and posterior distribution of a meta-analysis model}
 \usage{
 dplot.valmeta(x, par, distr_type, plot_type = "dens", ...)
 }
 \arguments{
 \item{x}{An object of class \code{"valmeta"}}
 
-\item{par}{Character string to specify for which parameter a plot should be generated. Choices are \code{'mu'} 
-(mean of the random effects model) and \code{'tau'} (standard deviation of the random effects model).}
+\item{par}{Character string to specify for which parameter a plot should be generated. Options are \code{"mu"} 
+(mean of the random effects model) and \code{"tau"} (standard deviation of the random effects model).}
 
-\item{distr_type}{Character string to specify whether the prior (\code{'prior'}) or posterior distribution (\code{'posterior'}) 
-should be displayed.}
+\item{distr_type}{Character string to specify whether the prior distribution (\code{"prior"}) or 
+posterior distribution (\code{"posterior"}) should be displayed.}
 
-\item{plot_type}{Character string to specify whether a density plot (\code{'dens'}) or histogram (\code{'hist'}) 
-should be displayed.}
+\item{plot_type}{Character string to specify whether a density plot (\code{"dens"}) or 
+histogram (\code{"hist"}) should be displayed.}
 
 \item{\ldots}{Additional arguments which are currently not used}
 }
@@ -29,6 +29,8 @@ Function to generate plots for the prior and posterior distribution of a Bayesia
 \examples{
 \dontrun{
 data(EuroSCORE)
+
+# Meta-analysis of the concordance statistic
 fit <- valmeta(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl,
                cstat.ciub=c.index.95CIu, N=n, O=n.events, 
                data=EuroSCORE, method="BAYES", slab=Study)
@@ -48,10 +50,6 @@ fit2 <- valmeta(measure="OE", O=n.events, E=e.events, N=n, data=EuroSCORE.new,
 dplot(fit2, plot_type = "hist")
 } 
 
-}
-\references{
-Debray TPA, Damen JAAG, Snell KIE, Ensor J, Hooft L, Reitsma JB, et al. A guide to systematic review 
-and meta-analysis of prediction model performance. \emph{BMJ}. 2017;356:i6460.
 }
 \author{
 Thomas Debray <thomas.debray@gmail.com>

@@ -129,7 +129,7 @@ An object of class \code{valmeta} with the following elements:
  \item{"ci.ub"}{upper bound of the confidence (or credibility) interval of the summary performance estimate.}
  \item{"pi.lb"}{lower bound of the (approximate) prediction interval of the summary performance estimate.}
  \item{"pi.ub"}{upper bound of the (approximate) prediction interval of the summary performance estimate.}
- \item{"fit"}{the full results from the fitted model.}
+ \item{"fit"}{the full results from the fitted model. }
  \item{"slab"}{vector specifying the label of each study.}
 }
 }
@@ -214,7 +214,7 @@ valmeta(measure="OE", O=n.events, E=e.events, data=EuroSCORE, method="ML",
 
 # Bayesian random effects meta-analysis of the c-statistic
 fit2 <- valmeta(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl,
-                cstat.ciub=c.index.95CIu, N=n, O=n.events, 
+                cstat.ciub=c.index.95CIu, cstat.cilv=0.95, N=n, O=n.events, 
                 data=EuroSCORE, method="BAYES", slab=Study)
 
 # Bayesian one-stage random effects meta-analysis of the total O:E ratio
@@ -243,24 +243,24 @@ valmeta(measure="OE", Po=Po, Pe=Pe, N=n, data=Framingham)
 }
 \references{
 Debray TPA, Damen JAAG, Snell KIE, Ensor J, Hooft L, Reitsma JB, et al. A guide to systematic review and meta-analysis 
-of prediction model performance. \emph{BMJ}. 2017;356:i6460. Available from: \url{https://www.bmj.com/content/356/bmj.i6460}
+of prediction model performance. \emph{BMJ}. 2017;356:i6460.
 
-Debray TPA, Damen JAAG, Riley R, Snell KIE, Reitsma JB, Hooft L, et al. A framework for meta-analysis of prediction model studies 
-with binary and time-to-event outcomes. \emph{Stat Methods Med Res}. 2019 Sep;28(9):2768--86. 
+Debray TPA, Damen JAAG, Riley R, Snell KIE, Reitsma JB, Hooft L, et al. A framework for meta-analysis of prediction model 
+studies with binary and time-to-event outcomes. \emph{Stat Methods Med Res}. 2019 Sep;28(9):2768--86. 
 
-Riley RD, Tierney JF, Stewart LA. Individual participant data meta-analysis: a handbook for healthcare research. 
-Hoboken, NJ: Wiley; 2021. ISBN: 978-1-119-33372-2.
+Riley RD, Tierney JF, Stewart LA. Individual participant data meta-analysis: a handbook for healthcare research. Hoboken, NJ: Wiley; 2021. 
+ISBN: 978-1-119-33372-2.
 
 Steyerberg EW, Nieboer D, Debray TPA, van Houwelingen HC. Assessment of heterogeneity in an individual participant
-data meta-analysis of prediction models: An overview and illustration. \emph{Stat Med}. 2019;38(22):4290--309.
+data meta-analysis of prediction models: An overview and illustration. \emph{Stat Med}. 2019; In press.
 
 Viechtbauer W. Conducting Meta-Analyses in R with the metafor Package. \emph{Journal of Statistical Software}. 
 2010; 36(3). Available from: \url{https://www.jstatsoft.org/v36/i03/}
 }
 \seealso{
 \code{\link{ccalc}} to calculate concordance statistics and corresponding standard errors, \code{\link{oecalc}} to 
-calculate the total O:E ratio and corresponding standard errors, \code{\link{plot.valmeta}} to generate forest plots, 
-\code{\link{dplot.valmeta}} to generate plots of the prior and posterior distribution.
+calculate the total O:E ratio and corresponding standard errors, 
+\code{\link{plot.valmeta}} to generate forest plots
 }
 \keyword{calibration}
 \keyword{discrimination}

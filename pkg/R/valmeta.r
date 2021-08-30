@@ -119,28 +119,28 @@
 ##'  \item{"ci.ub"}{upper bound of the confidence (or credibility) interval of the summary performance estimate.}
 ##'  \item{"pi.lb"}{lower bound of the (approximate) prediction interval of the summary performance estimate.}
 ##'  \item{"pi.ub"}{upper bound of the (approximate) prediction interval of the summary performance estimate.}
-##'  \item{"fit"}{the full results from the fitted model.}
+##'  \item{"fit"}{the full results from the fitted model. }
 ##'  \item{"slab"}{vector specifying the label of each study.}
 ##' }
 #' @references 
 #' Debray TPA, Damen JAAG, Snell KIE, Ensor J, Hooft L, Reitsma JB, et al. A guide to systematic review and meta-analysis 
-#' of prediction model performance. \emph{BMJ}. 2017;356:i6460. Available from: \url{https://www.bmj.com/content/356/bmj.i6460}
+#' of prediction model performance. \emph{BMJ}. 2017;356:i6460.
 #' 
-#' Debray TPA, Damen JAAG, Riley R, Snell KIE, Reitsma JB, Hooft L, et al. A framework for meta-analysis of prediction model studies 
-#' with binary and time-to-event outcomes. \emph{Stat Methods Med Res}. 2019 Sep;28(9):2768--86. 
+#' Debray TPA, Damen JAAG, Riley R, Snell KIE, Reitsma JB, Hooft L, et al. A framework for meta-analysis of prediction model 
+#' studies with binary and time-to-event outcomes. \emph{Stat Methods Med Res}. 2019 Sep;28(9):2768--86. 
 #' 
-#' Riley RD, Tierney JF, Stewart LA. Individual participant data meta-analysis: a handbook for healthcare research. 
-#' Hoboken, NJ: Wiley; 2021. ISBN: 978-1-119-33372-2.
+#' Riley RD, Tierney JF, Stewart LA. Individual participant data meta-analysis: a handbook for healthcare research. Hoboken, NJ: Wiley; 2021. 
+#' ISBN: 978-1-119-33372-2.
 #' 
 #' Steyerberg EW, Nieboer D, Debray TPA, van Houwelingen HC. Assessment of heterogeneity in an individual participant
-#' data meta-analysis of prediction models: An overview and illustration. \emph{Stat Med}. 2019;38(22):4290--309.
+#' data meta-analysis of prediction models: An overview and illustration. \emph{Stat Med}. 2019; In press.
 #' 
 #' Viechtbauer W. Conducting Meta-Analyses in R with the metafor Package. \emph{Journal of Statistical Software}. 
 #' 2010; 36(3). Available from: \url{https://www.jstatsoft.org/v36/i03/}
 #'   
 #' @seealso \code{\link{ccalc}} to calculate concordance statistics and corresponding standard errors, \code{\link{oecalc}} to 
-#' calculate the total O:E ratio and corresponding standard errors, \code{\link{plot.valmeta}} to generate forest plots, 
-#' \code{\link{dplot.valmeta}} to generate plots of the prior and posterior distribution.
+#' calculate the total O:E ratio and corresponding standard errors, 
+#' \code{\link{plot.valmeta}} to generate forest plots
 #' 
 #' @examples 
 #' ######### Validation of prediction models with a binary outcome #########
@@ -167,7 +167,7 @@
 #' 
 #' # Bayesian random effects meta-analysis of the c-statistic
 #' fit2 <- valmeta(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl,
-#'                 cstat.ciub=c.index.95CIu, N=n, O=n.events, 
+#'                 cstat.ciub=c.index.95CIu, cstat.cilv=0.95, N=n, O=n.events, 
 #'                 data=EuroSCORE, method="BAYES", slab=Study)
 #' 
 #' # Bayesian one-stage random effects meta-analysis of the total O:E ratio
@@ -202,7 +202,6 @@
 #' @importFrom lme4 glmer
 #' @importFrom stats coef coefficients dnorm glm nobs optim pchisq qnorm qt pt rnorm runif confint poisson
 #' predict vcov as.formula formula model.frame model.frame.default update.formula family
-
 valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cstat.cilv,
                     sd.LP, OE, OE.se, OE.cilb, OE.ciub, OE.cilv, citl, citl.se, N, O, E, Po, Po.se, Pe, data, 
                     method="REML", test="knha", verbose=FALSE, slab, n.chains = 4, pars, ...) {
@@ -223,7 +222,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
     if (!is.data.frame(data))
       data <- data.frame(data)
   }
-
+  
   #######################################################################################
   # Retrieve all data
   #######################################################################################
@@ -269,7 +268,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
   Po.se         <- eval(mf.Po.se, data, enclos = sys.frame(sys.parent()))
   mf.Pe         <- mf[[match("Pe", names(mf))]]
   Pe            <- eval(mf.Pe, data, enclos = sys.frame(sys.parent()))
-
+  
   if (is.null(method)) {
     stop("No estimation method specified!")
   }
@@ -277,7 +276,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
   if (method == "FE") {
     test <- "z" #Do not use SJHK adjustment in a fixed effect MA
   }
-
+  
   
   #######################################################################################
   # Check if we need to load runjags
@@ -338,8 +337,8 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
   }
   
   if (k < 1) stop("No data provided!")
- 
-
+  
+  
   #######################################################################################
   # Prepare data
   #######################################################################################
@@ -384,7 +383,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
   out$level <- pars.default$level 
   class(out) <- "valmeta"
   
-
+  
   #######################################################################################
   # Meta-analysis of the c-statistic
   #######################################################################################
@@ -400,7 +399,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
     } else {
       stop(paste("Meta-analysis model currently not supported: '", out$model, '"', sep = ""))
     }
-
+    
     ds <- ccalc(cstat = cstat, 
                 cstat.se = cstat.se, 
                 cstat.cilb = cstat.cilb,
@@ -425,10 +424,10 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
       
       # Apply the meta-analysis
       fit <- metafor::rma(yi = ds$theta, 
-                 sei = ds$theta.se, 
-                 method = method, 
-                 test = test, 
-                 slab = out$slab, ...)
+                          sei = ds$theta.se, 
+                          method = method, 
+                          test = test, 
+                          slab = out$slab, ...)
       
       preds <- predict(fit, level = pars.default$level)
       
@@ -508,13 +507,13 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
                  Po.se = Po.se,
                  Pe = Pe, 
                  slab = slab, g = g, level = pars.default$level) 
-
+    
     ## Assign study labels
     out$slab <- rownames(ds)
     
     ## Initial guess for number of studies in the meta-analysis
     out$numstudies <- length(which(rowMeans(!is.na(ds)) == 1))
-      
+    
     if (method != "BAYES") { # Use of rma
       
       if (pars.default$model.oe == "normal/identity") {
@@ -546,7 +545,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
         # The predict function from metafor uses a Normal distribution for prediction intervals, 
         # Here, we will use a Student T distribution instead
         predint <- calcPredInt(coefficients(fit), sigma2=fit$se**2, tau2=fit$tau2, k=fit$k, level=pars.default$level)
-
+        
         out$est    <- as.numeric(exp(coefficients(fit)))
         out$ci.lb  <- exp(preds$ci.lb)
         out$ci.ub  <- exp(preds$ci.ub)
@@ -566,7 +565,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
           
           # Omit 'Study' again from the dataset
           ds <- ds[,-(colnames(ds)=="Study")]
-
+          
           preds.ci <- confint(fit, level=pars.default$level, quiet=!verbose, ...)
           predint <- calcPredInt(lme4::fixef(fit), sigma2=vcov(fit)[1,1], tau2=(as.data.frame(lme4::VarCorr(fit))["vcov"])[1,1], k=lme4::ngrps(fit), level=pars.default$level)
           
@@ -619,70 +618,25 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
     
     return(out)
   }
-
 }
 
-.generateBugsCstat <- function(pars, 
-                                ...) # standard deviation for student T prior
-{
-
-  hp.tau.prec <- 1/(pars$hp.tau.sigma**2)
-  hp.mu.prec <- 1/pars$hp.mu.var
-  
-  out <- "model {\n " 
-  out <- paste(out, "for (i in 1:Nstudies)\n  {\n")
-  out <- paste(out, "    theta[i] ~ dnorm(alpha[i], wsprec[i])\n")
-  out <- paste(out, "    alpha[i] ~ dnorm(mu.tobs, bsprec)\n")
-  out <- paste(out, "    wsprec[i] <- 1/(theta.var[i])\n")
-  out <- paste(out, " }\n")
-  out <- paste(out, " bsprec <- 1/(bsTau*bsTau)\n")
-  
-  if (pars$hp.tau.dist == "dunif") {
-    out <- paste(out, "  bsTau ~ dunif(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep = "") 
-    out <- paste(out, "  prior_bsTau ~ dunif(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep = "")
-  } else if (pars$hp.tau.dist == "dhalft") {
-    out <- paste(out, "  bsTau ~ dt(", pars$hp.tau.mean," ,", hp.tau.prec, ",", pars$hp.tau.df, ")T(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep = "") 
-    out <- paste(out, "  prior_bsTau ~ dt(", pars$hp.tau.mean," ,", hp.tau.prec, ",", pars$hp.tau.df, ")T(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep = "")
-  } else {
-    stop("Specified prior not implemented")
-  }
-  
-  if (pars$model.cstat  == "normal/logit") {
-    out <- paste(out, "  mu.tobs ~ dnorm(", pars$hp.mu.mean, ",", hp.mu.prec, ")\n", sep = "")
-    out <- paste(out, "  prior_mu ~ dnorm(", pars$hp.mu.mean, ",", hp.mu.prec, ")\n", sep = "")
-    out <- paste(out, "  mu.obs <- 1/(1+exp(-mu.tobs))\n", sep = "")
-    out <- paste(out, "  pred.obs <- 1/(1+exp(-pred.tobs))\n", sep = "")
-    out <- paste(out, "  pred.tobs ~ dnorm(mu.tobs, bsprec)\n", sep = "")
-  } else {
-    stop("Specified link function not implemented")
-  }
-  out <- paste(out, "}", sep = "")
-  
-  return(out)
-}
 
 #' @author Thomas Debray <thomas.debray@gmail.com>
 #' @method print valmeta
 #' @export
 print.valmeta <- function(x, ...) {
   text.stat <- attr(x$data,'estimand')
-  text.ci <- if (x$method == "BAYES") "credibility" else "confidence"
-  text.pi <- if (x$method == "BAYES") "" else "(approximate)"
+  text.model <- if (x$method=="FE") "Fixed" else "Random"
+  text.ci <- if(x$method=="BAYES") "credibility" else "confidence"
+  text.pi <- if(x$method=="BAYES") "" else "(approximate)"
   
-  if (x$method != "FE") {
-    cat(paste("Random effects summary ", text.stat, 
-              " with ", x$level*100, "% ", text.ci, 
-              " and ", text.pi, " ", x$level*100, "% prediction interval:\n\n", sep = ""))
-    results <- c(Estimate = x$est, 
-                 CIl = x$ci.lb, 
-                 CIu = x$ci.ub, 
-                 PIl = x$pi.lb, 
-                 PIu = x$pi.ub)
+  
+  if (x$method!="FE") {
+    cat(paste("Summary ", text.stat, " with ", x$level*100, "% ", text.ci, " and ", text.pi, " ", x$level*100, "% prediction interval:\n\n", sep=""))
+    results <- c(Estimate=x$est, CIl=x$ci.lb, CIu=x$ci.ub, PIl=x$pi.lb, PIu=x$pi.ub)
   } else {
-    cat(paste("Fixed effect summary ", text.stat, " with ", x$level*100, "% ", text.ci, " interval:\n\n", sep = ""))
-    results <- c(Estimate = x$est, 
-                 CIl = x$ci.lb, 
-                 CIu = x$ci.ub)
+    cat(paste("Summary ", text.stat, " with ", x$level*100, "% ", text.ci, " interval:\n\n", sep=""))
+    results <- c(Estimate=x$est, CIl=x$ci.lb, CIu=x$ci.ub)
   }
   print(results)
   cat("\n")
@@ -707,6 +661,10 @@ print.valmeta <- function(x, ...) {
 #' Lewis S, Clarke M. Forest plots: trying to see the wood and the trees. \emph{BMJ}. 2001; 322(7300):1479--80.
 #' 
 #' Riley RD, Higgins JPT, Deeks JJ. Interpretation of random effects meta-analyses. \emph{BMJ}. 2011 342:d549--d549.
+#' 
+#' @seealso When a Bayesian meta-analysis was conducted, the prior and posterior distribution can be visualized using \code{\link{dplot.valmeta}}. 
+#' Further, the running means and the presence of autocorrelation can be inspected using \code{\link{rmplot.valmeta}} and, respectively, 
+#' \code{\link{acplot.valmeta}}.
 #' 
 #' @examples 
 #' data(EuroSCORE)
@@ -759,33 +717,96 @@ plot.valmeta <- function(x,  ...) {
          ...)
 }
 
-.initiateDefaultPars <- function(pars) {
-  pars.default <- list(level = 0.95,
-                       hp.mu.mean = 0, 
-                       hp.mu.var = 1E6,
-                       hp.tau.min = 0,
-                       hp.tau.max = 2,
-                       hp.tau.mean = 0,
-                       hp.tau.sigma = 0.5,
-                       hp.tau.dist = "dunif", 
-                       hp.tau.df = 3, 
-                       correction = 0.5,
-                       method.restore.c.se = 4,
-                       model.cstat = "normal/logit", #Alternative: "normal/identity"
-                       model.oe = "normal/log") #Alternative: "poisson/log" or "normal/identity"
-  
-  if (!missing(pars)) {
-    for (i in 1:length(pars)) {
-      element <- ls(pars)[i]
-      pars.default[[element]] <- pars[[element]]
-    }
+
+
+#' Plot the autocorrelation of a Bayesian meta-analysis model
+#' 
+#' Function to display autocorrelation of a fitted Bayesian meta-analysis model.
+#' 
+#' @param x An object of class \code{"valmeta"}
+#' @param \ldots Additional arguments which are currently not used
+#' 
+#' @details 
+#' Results are displayed for the estimated mean (\code{mu}) and standard-deviation (\code{tau}) of the meta-analysis model.
+#' 
+#' @examples 
+#' \dontrun{
+#' data(EuroSCORE)
+#' 
+#' fit <- valmeta(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl,
+#'                cstat.ciub=c.index.95CIu, N=n, O=n.events, 
+#'                data=EuroSCORE, method="BAYES", slab=Study)
+#' acplot(fit)
+#' } 
+#' 
+#' @keywords meta-analysis convergence autocorrelation
+#'             
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' 
+#' @return An object of class \code{ggplot}
+#' 
+#' @export
+acplot.valmeta <- function(x, ...) {
+  if (!("runjags" %in% class(x$fit))) {
+    stop("The object 'x' does not represent a Bayesian analysis!")
   }
-  
-  if (pars.default$level < 0 | pars.default$level > 1) {
-    stop("Invalid value for 'level'!")
+  if (!requireNamespace("ggmcmc", quietly = TRUE)) {
+    stop("The package 'ggmcmc' is currently not installed!")
   } 
   
-  return(pars.default)
+  P <- data.frame(
+    Parameter = c("mu.tobs", "bsTau"),
+    Label = c("mu", "tau"))
+  
+  S <- ggmcmc::ggs(x$fit$mcmc, par_labels = P, sort = FALSE)
+  S <- subset(S, S$ParameterOriginal %in% P$Parameter)
+  
+  ggmcmc::ggs_autocorrelation(S, greek = TRUE)
+}
+
+#' Plot the running means of a Bayesian meta-analysis model
+#' 
+#' Function to display running means of a fitted Bayesian meta-analysis model.
+#' 
+#' @param x An object of class \code{"valmeta"}
+#' @param \ldots Additional arguments which are currently not used
+#' 
+#' @details 
+#' Results are displayed for the estimated mean (\code{mu}) and standard-deviation (\code{tau}) of the meta-analysis model.
+#' 
+#' @examples 
+#' \dontrun{
+#' data(EuroSCORE)
+#' 
+#' fit <- valmeta(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl,
+#'                cstat.ciub=c.index.95CIu, N=n, O=n.events, 
+#'                data=EuroSCORE, method="BAYES", slab=Study)
+#' rmplot(fit)
+#' } 
+#' 
+#' @keywords meta-analysis convergence
+#'             
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' 
+#' @return An object of class \code{ggplot}
+#' 
+#' @export
+rmplot.valmeta <- function(x, ...) {
+  if (!("runjags" %in% class(x$fit))) {
+    stop("The object 'x' does not represent a Bayesian analysis!")
+  }
+  if (!requireNamespace("ggmcmc", quietly = TRUE)) {
+    stop("The package 'ggmcmc' is currently not installed!")
+  } 
+  
+  P <- data.frame(
+    Parameter = c("mu.tobs", "bsTau"),
+    Label = c("mu", "tau"))
+  
+  S <- ggmcmc::ggs(x$fit$mcmc, par_labels = P, sort = FALSE)
+  S <- subset(S, S$ParameterOriginal %in% P$Parameter)
+  
+  ggmcmc::ggs_running(S, greek = TRUE)
 }
 
 #' Plot the prior and posterior distribution of a meta-analysis model
@@ -834,7 +855,7 @@ plot.valmeta <- function(x,  ...) {
 #' @export
 dplot.valmeta <- function(x, par, distr_type, plot_type = "dens", ...) {
   if (!("runjags" %in% class(x$fit))) {
-    stop("Not a Bayesian analysis!")
+    stop("The object 'x' does not represent a Bayesian analysis!")
   }
   if (!requireNamespace("ggmcmc", quietly = TRUE)) {
     stop("The package 'ggmcmc' is currently not installed!")
@@ -842,26 +863,26 @@ dplot.valmeta <- function(x, par, distr_type, plot_type = "dens", ...) {
   if (missing(par) & missing(distr_type)) {
     P <- data.frame(
       Parameter = c("prior_mu", "mu.tobs", "prior_bsTau", "bsTau"),
-      Label = c("a) Prior distribution of the (transformed) meta-analysis mean", 
-                "b) Posterior distribution of the (transformed) meta-analysis mean", 
+      Label = c("a) Prior distribution of the meta-analysis mean", 
+                "b) Posterior distribution of the meta-analysis mean", 
                 "c) Prior distribution of the between-study standard deviation",
                 "d) Posterior distribution of the between-study standard deviation"))
   } else if (missing(par) & distr_type == "posterior") {
     P <- data.frame(
       Parameter = c("mu.tobs", "bsTau"),
-      Label = c("Posterior distribution of the (transformed) meta-analysis mean", "Posterior distribution of the between-study standard deviation"))
+      Label = c("Posterior distribution of the meta-analysis mean", "Posterior distribution of the between-study standard deviation"))
   } else if (missing(par) & distr_type == "prior") {
     P <- data.frame(
       Parameter = c("prior_mu", "prior_bsTau"),
-      Label = c("Prior distribution of the (transformed) meta-analysis mean", "Prior distribution of the between-study standard deviation"))
+      Label = c("Prior distribution of the meta-analysis mean", "Prior distribution of the between-study standard deviation"))
   } else if (par == "mu" & distr_type == "posterior") {
     P <- data.frame(
       Parameter = c("mu.tobs"),
-      Label = c("Posterior distribution of the (transformed) meta-analysis mean"))
+      Label = c("Posterior distribution of the meta-analysis mean"))
   } else if (par == "mu" & distr_type == "prior") {
     P <- data.frame(
       Parameter = c("prior_mu"),
-      Label = c("Prior distribution of the (transformed) meta-analysis mean"))
+      Label = c("Prior distribution of the meta-analysis mean"))
   } else if (par == "tau") {
     P <- data.frame(
       Parameter = ifelse(distr_type == "posterior", "bsTau", "prior_bsTau"),
@@ -872,7 +893,7 @@ dplot.valmeta <- function(x, par, distr_type, plot_type = "dens", ...) {
   
   S <- ggmcmc::ggs(x$fit$mcmc, par_labels = P, sort = FALSE)
   S <- subset(S, S$ParameterOriginal %in% P$Parameter)
-
+  
   if (plot_type == "dens") {
     ggmcmc::ggs_density(S)
   } else if (plot_type == "hist") {
@@ -881,3 +902,4 @@ dplot.valmeta <- function(x, par, distr_type, plot_type = "dens", ...) {
     stop("Invalid plot type")
   }
 }
+
