@@ -785,7 +785,7 @@ plot.valmeta <- function(x,  ...) {
   return(pars.default)
 }
 
-#' Plot Parameter Density
+#' Plot density of estimated model parameters
 #' 
 #' Function to generate plots of the prior and posterior density of a Bayesian meta-analysis.
 #' 
@@ -877,7 +877,3 @@ density.valmeta <- function(x, par, type, ...) {
 
   ggmcmc::ggs_density(S)
 }
-
-
-
-

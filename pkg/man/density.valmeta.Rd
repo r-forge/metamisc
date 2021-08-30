@@ -2,7 +2,7 @@
 % Please edit documentation in R/valmeta.r
 \name{density.valmeta}
 \alias{density.valmeta}
-\title{Plot Parameter Density}
+\title{Plot density of estimated model parameters}
 \usage{
 \method{density}{valmeta}(x, par, type, ...)
 }
