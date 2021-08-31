@@ -50,7 +50,7 @@
 #' cause the simulation to run more slowly. The default number of chains is 4.
 #' @param pars A list with additional arguments.  See 'Details' for more information. The following parameters configure the MCMC sampling procedure:  
 #' \code{hp.mu.mean} (mean of the prior distribution of the random effects model, defaults to 0), 
-#' \code{hp.mu.var} (variance of the prior distribution of the random effects model, defaults to 1E6), 
+#' \code{hp.mu.var} (variance of the prior distribution of the random effects model, defaults to 1000), 
 #' \code{hp.tau.min} (minimum value for the between-study standard deviation, defaults to 0), 
 #' \code{hp.tau.max} (maximum value for the between-study standard deviation, defaults to 2), 
 #' \code{hp.tau.sigma} (standard deviation of the prior distribution for the between-study standard-deviation), 
@@ -96,7 +96,7 @@
 #' 
 #' The prior distribution for the (transformed) summary estimate is always modeled using a Normal distribution, 
 #' with mean \code{hp.mu.mean} (defaults to 0) and variance 
-#' \code{hp.mu.var} (defaults to 1E6). For meta-analysis of the total O:E ratio, the maximum value for \code{hp.mu.var} is 100.
+#' \code{hp.mu.var} (defaults to 1000). For meta-analysis of the total O:E ratio, the maximum value for \code{hp.mu.var} is 100.
 #' 
 #' By default, the prior distribution for the between-study standard deviation is modeled using a uniform distribution 
 #' (\code{hp.tau.dist="dunif"}), with boundaries \code{hp.tau.min} and \code{hp.tau.max}. Alternatively, it is possible
@@ -206,7 +206,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
                     sd.LP, OE, OE.se, OE.cilb, OE.ciub, OE.cilv, citl, citl.se, N, O, E, Po, Po.se, Pe, data, 
                     method="REML", test="knha", verbose=FALSE, slab, n.chains = 4, pars, ...) {
   
-  pars.default <- .initiateDefaultPars(pars)
+  pars.default <- .initiateDefaultPars(pars, type = "valmeta")
   
   ### check if data argument has been specified
   if (missing(data))
@@ -463,16 +463,15 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
       
       out$numstudies <- fit$k
     } else {
-      bayesma <- run_Bayesian_MA_cstat(ds, pars = pars.default, n.chains = n.chains, verbose = verbose, ...) 
-      
-      out$numstudies  <- bayesma$numstudies
-      out$est    <- bayesma$est
-      out$ci.lb  <- bayesma$ci.lb
-      out$ci.ub  <- bayesma$ci.ub
-      out$pi.lb  <- bayesma$pi.lb
-      out$pi.ub  <- bayesma$pi.ub
-      out$PED <- bayesma$PED
-      out$fit <- bayesma$fit
+      bayesma <- run_Bayesian_REMA(list(theta = ds$theta,
+                                        theta.var = ds$theta.se**2,
+                                        Nstudies = length(ds$theta)), 
+                                   pars = pars.default, 
+                                   FUN_generate_bugs = .generateBugsCstat,
+                                   n.chains = n.chains, 
+                                   verbose = verbose, ...) 
+      out <- c(out, bayesma)
+      class(out) <- "valmeta"
     }
     
     out$data <- ds
@@ -857,9 +856,7 @@ dplot.valmeta <- function(x, par, distr_type, plot_type = "dens", ...) {
   if (!("runjags" %in% class(x$fit))) {
     stop("The object 'x' does not represent a Bayesian analysis!")
   }
-  if (!requireNamespace("ggmcmc", quietly = TRUE)) {
-    stop("The package 'ggmcmc' is currently not installed!")
-  } 
+
   if (missing(par) & missing(distr_type)) {
     P <- data.frame(
       Parameter = c("prior_mu", "mu.tobs", "prior_bsTau", "bsTau"),
@@ -891,15 +888,6 @@ dplot.valmeta <- function(x, par, distr_type, plot_type = "dens", ...) {
     stop("Invalid combination of 'par' and 'distr_type'")
   }
   
-  S <- ggmcmc::ggs(x$fit$mcmc, par_labels = P, sort = FALSE)
-  S <- subset(S, S$ParameterOriginal %in% P$Parameter)
-  
-  if (plot_type == "dens") {
-    ggmcmc::ggs_density(S)
-  } else if (plot_type == "hist") {
-    ggmcmc::ggs_histogram(S)
-  } else {
-    stop("Invalid plot type")
-  }
+  dplot(x$fit$mcmc, P = P, plot_type = plot_type, ...)
 }
 

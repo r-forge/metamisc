@@ -65,7 +65,7 @@ forest <- function(...)
 #' 
 #' @export
 # This could also be named forest.numeric
-forest.default <- function (theta, 
+forest.default <- function(theta, 
                     theta.ci.lb,
                     theta.ci.ub,
                     theta.slab, 
@@ -97,10 +97,8 @@ forest.default <- function (theta,
   if (missing(theta.slab)) stop("Study labels are missing!")
   
   num.studies <- unique(c(length(theta), length(theta.ci.lb), length(theta.ci.ub), length(theta.slab)))
-  if (length(num.studies)>1) stop(paste("Too few studies for a forest plot!"))
-  # study <- NULL
-  
-  
+  if (length(num.studies) > 1) stop(paste("Too few studies for a forest plot!"))
+
   #Extract data
   yi <- theta
   k <- length(theta)
@@ -131,9 +129,9 @@ forest.default <- function (theta,
   }
   
   # Determine ordering
-  if (sort=="asc") {
+  if (sort == "asc") {
     i.index <- order(yi, decreasing = FALSE)
-  } else if (sort=="desc") {
+  } else if (sort == "desc") {
     i.index <- order(yi, decreasing = TRUE)
   } else {
     i.index <- 1:length(yi)
@@ -336,5 +334,54 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
       print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
                                       layout.pos.col = matchidx$col))
     }
+  }
+}
+
+#' Posterior distribution of estimated model parameters
+#' 
+#' Generate a plot of the posterior distribution
+#' 
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' @param \dots Additional arguments, which are currently ignored.
+#' 
+#' @details This is a generic function. 
+#' 
+#' @export dplot
+dplot <- function(...)
+  UseMethod("dplot")
+
+
+#' Posterior distribution of estimated model parameters
+#' 
+#' Generate a plot of the posterior distribution
+#' 
+#' @param x An object of class \code{"mcmc.list"}
+#' @param P Optional dataframe describing the parameters to plot and their respective names
+#' @param plot_type Optional character string to specify whether a density plot (\code{"dens"}) or 
+#' histogram (\code{"hist"}) should be displayed.
+#' @param \ldots Additional arguments which are currently not used
+#' 
+#' 
+#' @keywords meta-analysis density distribution
+#'             
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' 
+#' @export
+dplot.mcmc.list <- function(x, P, plot_type = "dens", ...) {
+  requireNamespace("ggmcmc")
+  
+  if (!missing(P)) {
+    S <- ggmcmc::ggs(x, par_labels = P, sort = FALSE)
+    S <- subset(S, S$ParameterOriginal %in% P$Parameter)
+  } else {
+    S <- ggmcmc::ggs(x, sort = FALSE)
+  }
+  
+  if (plot_type == "dens") {
+    ggmcmc::ggs_density(S)
+  } else if (plot_type == "hist") {
+    ggmcmc::ggs_histogram(S)
+  } else {
+    stop("Invalid plot type")
   }
 }

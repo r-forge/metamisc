@@ -104,31 +104,8 @@ run_Bayesian_MA_oe <- function(x, pars, n.chains, verbose, ...) {
                                     pars = pars, ...)
   
   # Generate initial values from the relevant distributions
-  model.pars <- list()
-  model.pars[[1]] <- list(param = "mu.tobs", 
-                          param.f = rnorm, 
-                          param.args = list(n = 1, 
-                                            mean = pars$hp.mu.mean, 
-                                            sd = sqrt(pars$hp.mu.var)))
+  model.pars <- generateHyperparametersMA(pars, ...)
   
-  if (pars$hp.tau.dist == "dunif") {
-    model.pars[[2]] <- list(param = "bsTau", 
-                            param.f = runif, 
-                            param.args = list(n = 1, 
-                                              min = pars$hp.tau.min, 
-                                              max = pars$hp.tau.max))
-  } else if (pars$hp.tau.dist == "dhalft") {
-    model.pars[[2]] <- list(param = "bsTau", 
-                            param.f = rstudentt, 
-                            param.args = list(n = 1, 
-                                              mean = pars$hp.tau.mean, 
-                                              sigma = pars$hp.tau.sigma, 
-                                              df = pars$hp.tau.df,
-                                              lower = pars$hp.tau.min, 
-                                              upper = pars$hp.tau.max))
-  } else {
-    stop("Invalid distribution for 'hp.tau.dist'!")
-  }
   
   inits <- generateMCMCinits(n.chains = n.chains, 
                              model.pars = model.pars)
@@ -173,58 +150,7 @@ run_Bayesian_MA_oe <- function(x, pars, n.chains, verbose, ...) {
   
 }
 
-run_Bayesian_MA_cstat <- function(x, pars, n.chains, verbose, ...) {
 
-  # Perform a Bayesian meta-analysis
-  model <- .generateBugsCstat(pars = pars, ...)
-  
-  # Construct the hyperparameters
-  model.pars <- generateHyperparametersMA(pars)
-  
-  # Generate initial values from the relevant distributions
-  inits <- generateMCMCinits(n.chains = n.chains, model.pars = model.pars)
-  
-  mvmeta_dat <- list(theta = x$theta,
-                     theta.var = x$theta.se**2,
-                     Nstudies = length(x$theta))
-  jags.model <- runjags::run.jags(model = model, 
-                                  monitor = c("mu.tobs", "mu.obs", "pred.obs", "bsTau", "prior_bsTau", "prior_mu", "PED"), 
-                                  data = mvmeta_dat, 
-                                  confidence =  pars$level , # Which credibility intervals do we need?
-                                  n.chains = n.chains,
-                                  silent.jags = !verbose,
-                                  inits = inits,
-                                  ...)
-  
-  # Check convergence
-  psrf.ul <-  jags.model$psrf$psrf[,2]
-  psrf.target <- jags.model$psrf$psrf.target
-  
-  if(sum(psrf.ul > psrf.target)>0) {
-    warning(paste("Model did not properly converge! The upper bound of the convergence diagnostic (psrf) exceeds", 
-                  psrf.target, "for the parameters", 
-                  paste(rownames(jags.model$psrf$psrf)[which(psrf.ul > psrf.target)], " (psrf=", 
-                        round(jags.model$psrf$psrf[which(psrf.ul > psrf.target),2],2), ")", collapse=", ", sep=""),
-                  ". Consider re-running the analysis by increasing the optional arguments 'adapt', 'burnin' and/or 'sample'."  ))
-  }
-  
-  fit <- jags.model$summaries
-  
-  
-  #Extract PED
-  fit.dev <- runjags::extract(jags.model,"PED")
-  txtLevel <- (pars$level*100)
-  
-  out <- list(numstudies = dim(x)[1], 
-              fit = jags.model, 
-              PED = sum(fit.dev$deviance) + sum(fit.dev$penalty),
-              est = fit["mu.obs", "Median"],
-              ci.lb  = fit["mu.obs", paste("Lower", txtLevel, sep = "")],
-              ci.ub  = fit["mu.obs", paste("Upper", txtLevel, sep = "")],
-              pi.lb  = fit["pred.obs", paste("Lower", txtLevel, sep = "")],
-              pi.ub  = fit["pred.obs", paste("Upper", txtLevel, sep = "")])
-  out
-}
 
 generateHyperparametersMA <- function(x) {
   # Generate initial values from the relevant distributions
@@ -402,20 +328,24 @@ plotCalibration <- function(predy, obsy, modelname="Model",
   scatter
 }
 
-.initiateDefaultPars <- function(pars) {
+.initiateDefaultPars <- function(pars, type = "") {
   pars.default <- list(level = 0.95,
                        hp.mu.mean = 0, 
-                       hp.mu.var = 1E6,
+                       hp.mu.var = 1000,
                        hp.tau.min = 0,
-                       hp.tau.max = 2,
+                       hp.tau.max = 100,
                        hp.tau.mean = 0,
                        hp.tau.sigma = 0.5,
                        hp.tau.dist = "dunif", 
                        hp.tau.df = 3, 
-                       correction = 0.5,
-                       method.restore.c.se=4,
-                       model.cstat = "normal/logit", #Alternative: "normal/identity"
-                       model.oe = "normal/log") #Alternative: "poisson/log" or "normal/identity"
+                       correction = 0.5)
+  
+  if (type == "valmeta") {
+    pars.default$hp.tau.max = 2
+    pars.default$method.restore.c.se = 4
+    pars.default$model.cstat = "normal/logit"
+    pars.default$model.oe = "normal/log"  #Alternative: "poisson/log" or "normal/identity"
+  }
   
   if (!missing(pars)) {
     for (i in 1:length(pars)) {

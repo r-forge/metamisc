@@ -105,7 +105,7 @@ cause the simulation to run more slowly. The default number of chains is 4.}
 
 \item{pars}{A list with additional arguments.  See 'Details' for more information. The following parameters configure the MCMC sampling procedure:
 \code{hp.mu.mean} (mean of the prior distribution of the random effects model, defaults to 0), 
-\code{hp.mu.var} (variance of the prior distribution of the random effects model, defaults to 1E6), 
+\code{hp.mu.var} (variance of the prior distribution of the random effects model, defaults to 1000), 
 \code{hp.tau.min} (minimum value for the between-study standard deviation, defaults to 0), 
 \code{hp.tau.max} (maximum value for the between-study standard deviation, defaults to 2), 
 \code{hp.tau.sigma} (standard deviation of the prior distribution for the between-study standard-deviation), 
@@ -176,7 +176,7 @@ Credibility and prediction intervals are directly obtained from the correspondin
 
 The prior distribution for the (transformed) summary estimate is always modeled using a Normal distribution, 
 with mean \code{hp.mu.mean} (defaults to 0) and variance 
-\code{hp.mu.var} (defaults to 1E6). For meta-analysis of the total O:E ratio, the maximum value for \code{hp.mu.var} is 100.
+\code{hp.mu.var} (defaults to 1000). For meta-analysis of the total O:E ratio, the maximum value for \code{hp.mu.var} is 100.
 
 By default, the prior distribution for the between-study standard deviation is modeled using a uniform distribution 
 (\code{hp.tau.dist="dunif"}), with boundaries \code{hp.tau.min} and \code{hp.tau.max}. Alternatively, it is possible

@@ -12,6 +12,7 @@
   out <- paste(out, "    wsprec[i] <- 1/(theta.var[i])\n")
   out <- paste(out, " }\n")
   out <- paste(out, " bsprec <- 1/(bsTau*bsTau)\n")
+  out <- paste(out, " bsTauSq <- bsTau*bsTau\n")
   
   if (pars$hp.tau.dist == "dunif") {
     out <- paste(out, "  bsTau ~ dunif(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep = "") 
@@ -34,7 +35,19 @@
   }
   out <- paste(out, "}", sep = "")
   
-  return(out)
+  ret.out <- list(model.text = out, 
+                  model.pars = c(mu = "mu.tobs", # Meta-analysis mean
+                                 mu_t = "mu.obs", # Transformed meta-analysis mean
+                                 tau2 = "bsTauSq", 
+                                 tau = "bsTau", 
+                                 prior_tau = "prior_bsTau", 
+                                 prior_mu = "prior_mu", 
+                                 theta_new = "pred.tobs", # New draw from the meta-analysis distribution
+                                 theta_new_t = "pred.obs" # New draw on the transformed scale
+                  )
+  )
+  
+  return(ret.out)
 }
 
 
@@ -155,4 +168,53 @@ generateBugsOE <- function(extrapolate=F,
   
   out <- paste(out, "}", sep = "")
   return(out)
+}
+
+
+.generateBugsREMA <- function(pars, 
+                               ...) # standard deviation for student T prior
+{
+  hp.tau.prec <- 1/(pars$hp.tau.sigma**2)
+  hp.mu.prec <- 1/pars$hp.mu.var
+  
+  out <- "model {\n " 
+  out <- paste(out, "for (i in 1:k) {\n")
+  out <- paste(out, "    w[i] <- 1/vars[i]\n")
+  out <- paste(out, "    r[i] ~ dnorm(theta[i],w[i])\n")
+  out <- paste(out, "    theta[i] ~ dnorm(mu.tobs,prec)\n")
+  out <- paste(out, " }\n\n")
+  out <- paste(out, " #prior distributions\n")
+  out <- paste(out, " tausq <- bsTau*bsTau\n")
+  out <- paste(out, " prec <- 1/(tausq)\n")
+  
+  if (pars$hp.tau.dist == "dunif") {
+    out <- paste(out, "  bsTau ~ dunif(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep = "") 
+    out <- paste(out, "  prior_bsTau ~ dunif(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep = "")
+  } else if (pars$hp.tau.dist == "dhalft") {
+    out <- paste(out, "  bsTau ~ dt(", pars$hp.tau.mean," ,", hp.tau.prec, ",", pars$hp.tau.df, ")T(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep = "") 
+    out <- paste(out, "  prior_bsTau ~ dt(", pars$hp.tau.mean," ,", hp.tau.prec, ",", pars$hp.tau.df, ")T(", pars$hp.tau.min, ",", pars$hp.tau.max, ")\n", sep = "")
+  } else {
+    stop("Specified prior not implemented")
+  }
+  out <- paste(out, "  mu.tobs ~ dnorm(", pars$hp.mu.mean, ",", hp.mu.prec, ")\n", sep = "")
+  out <- paste(out, "  prior_mu ~ dnorm(", pars$hp.mu.mean, ",", hp.mu.prec, ")\n", sep = "")
+
+  out <- paste(out, " # predictive distribution\n")
+  out <- paste(out, "  theta.new  ~ dnorm(mu.tobs, prec)\n", sep = "")
+
+  out <- paste(out, "}", sep = "")
+  
+  ret.out <- list(model.text = out, 
+                  model.pars = c(mu = "mu.tobs", # Meta-analysis mean
+                                 mu_t = "mu.tobs", # Transformed meta-analysis mean
+                                 tau2 = "tausq", 
+                                 tau = "bsTau", 
+                                 prior_tau = "prior_bsTau", 
+                                 prior_mu = "prior_mu", 
+                                 theta_new = "theta.new", # New draw from the meta-analysis distribution
+                                 theta_new_t = "theta.new" # New draw on the transformed scale
+                                 )
+                  )
+  
+  return(ret.out)
 }
