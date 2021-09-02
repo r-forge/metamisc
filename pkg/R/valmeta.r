@@ -597,16 +597,8 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
     } else {
       if (verbose) print("Performing Bayesian one-stage meta-analysis...")
       bayesma <- run_Bayesian_MA_oe(ds, pars = pars.default, n.chains = n.chains, verbose = verbose, ...)
-      
-      out$model <- "hierarchical related regression"
-      out$numstudies  <- bayesma$numstudies
-      out$est    <- bayesma$est
-      out$ci.lb  <- bayesma$ci.lb
-      out$ci.ub  <- bayesma$ci.ub
-      out$pi.lb  <- bayesma$pi.lb
-      out$pi.ub  <- bayesma$pi.ub
-      out$PED <- bayesma$PED
-      out$fit <- bayesma$fit
+      out <- c(out, bayesma)
+      class(out) <- "valmeta"
     }
     
     if ("Study" %in% colnames(ds)) {
