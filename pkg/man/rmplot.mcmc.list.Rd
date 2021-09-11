@@ -13,7 +13,10 @@
 
 \item{greek}{Logical value indicating whether parameter labels have to be parsed to get Greek letters. Defaults to FALSE.}
 
-\item{\ldots}{Additional arguments which are currently not used}
+\item{\ldots}{Additional arguments which are passed to ggs_running}
+}
+\value{
+A \code{ggplot} object.
 }
 \description{
 Function to display running means of a fitted Bayesian meta-analysis model.

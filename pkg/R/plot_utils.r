@@ -343,6 +343,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 #' 
 #' @author Thomas Debray <thomas.debray@gmail.com>
 #' @param \dots Additional arguments, which are currently ignored.
+#' @return A \code{ggplot} object.
 #' 
 #' @details This is a generic function. 
 #' 
@@ -356,7 +357,8 @@ dplot <- function(...)
 #' 
 #' @author Thomas Debray <thomas.debray@gmail.com>
 #' @param \dots Additional arguments, which are currently ignored.
-#' 
+#' @return A \code{ggplot} object.
+#'
 #' @details This is a generic function. 
 #' 
 #' @export acplot
@@ -369,7 +371,8 @@ acplot <- function(...)
 #' 
 #' @author Thomas Debray <thomas.debray@gmail.com>
 #' @param \dots Additional arguments, which are currently ignored.
-#' 
+#' @return A \code{ggplot} object.
+#'  
 #' @details This is a generic function. 
 #' 
 #' @export rmplot
@@ -383,25 +386,26 @@ rmplot <- function(...)
 #' @param x An object of class \code{"mcmc.list"}
 #' @param P Optional dataframe describing the parameters to plot and their respective names
 #' @param greek Logical value indicating whether parameter labels have to be parsed to get Greek letters. Defaults to FALSE.
-#' @param \ldots Additional arguments which are currently not used
-#' 
+#' @param nLags	Integer indicating the number of lags of the autocorrelation plot.
+#' @param \ldots Additional arguments which are passed to ggs_autocorrelation
+#' @return A \code{ggplot} object.
 #' 
 #' @keywords meta-analysis autocorrelation
 #'             
 #' @author Thomas Debray <thomas.debray@gmail.com>
 #' 
 #' @export
-acplot.mcmc.list <- function(x, P, greek = FALSE, ...) {
+#' @importFrom dplyr group_by do %>%
+acplot.mcmc.list <- function(x, P, nLags = 50, greek = FALSE, ...) {
   requireNamespace("ggmcmc")
   
   if (!missing(P)) {
     S <- ggmcmc::ggs(x, par_labels = P, sort = FALSE)
-    S <- subset(S, S$ParameterOriginal %in% P$Parameter)
+    D <- subset(S, S$ParameterOriginal %in% P$Parameter)
   } else {
-    S <- ggmcmc::ggs(x, sort = FALSE)
+    D <- ggmcmc::ggs(x, sort = FALSE)
   }
-  
-  ggmcmc::ggs_autocorrelation(S, greek = greek)
+  ggmcmc::ggs_autocorrelation(D = D, nLags = nLags, greek = greek, ...)
 }
 
 
@@ -412,7 +416,8 @@ acplot.mcmc.list <- function(x, P, greek = FALSE, ...) {
 #' @param x An object of class \code{"mcmc.list"}
 #' @param P Optional dataframe describing the parameters to plot and their respective names
 #' @param greek Logical value indicating whether parameter labels have to be parsed to get Greek letters. Defaults to FALSE.
-#' @param \ldots Additional arguments which are currently not used
+#' @param \ldots Additional arguments which are passed to ggs_running
+#' @return A \code{ggplot} object.
 #' 
 #'             
 #' @author Thomas Debray <thomas.debray@gmail.com>
@@ -423,12 +428,12 @@ rmplot.mcmc.list <- function(x, P, greek = FALSE, ...) {
   
   if (!missing(P)) {
     S <- ggmcmc::ggs(x, par_labels = P, sort = FALSE)
-    S <- subset(S, S$ParameterOriginal %in% P$Parameter)
+    D <- subset(S, S$ParameterOriginal %in% P$Parameter)
   } else {
-    S <- ggmcmc::ggs(x, sort = FALSE)
+    D <- ggmcmc::ggs(x, sort = FALSE)
   }
   
-  ggmcmc::ggs_running(S, greek = greek)
+  ggmcmc::ggs_running(D = D, greek = greek, ...)
 }
 
 
@@ -441,6 +446,7 @@ rmplot.mcmc.list <- function(x, P, greek = FALSE, ...) {
 #' @param plot_type Optional character string to specify whether a density plot (\code{"dens"}) or 
 #' histogram (\code{"hist"}) should be displayed.
 #' @param \ldots Additional arguments which are currently not used
+#' @return A \code{ggplot} object.
 #' 
 #' 
 #' @keywords meta-analysis density distribution

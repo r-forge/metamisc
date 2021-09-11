@@ -730,6 +730,7 @@ plot.valmeta <- function(x,  ...) {
 #' 
 #' @param x An object of class \code{"valmeta"}
 #' @param \ldots Additional arguments which are currently not used
+#' @return A \code{ggplot} object.
 #' 
 #' @details 
 #' Results are displayed for the estimated mean (\code{mu}) and standard-deviation (\code{tau}) of the meta-analysis model.
@@ -773,6 +774,7 @@ acplot.valmeta <- function(x, ...) {
 #' 
 #' @param x An object of class \code{"valmeta"}
 #' @param \ldots Additional arguments which are currently not used
+#' @return A \code{ggplot} object.
 #' 
 #' @details 
 #' Results are displayed for the estimated mean (\code{mu}) and standard-deviation (\code{tau}) of the meta-analysis model.
@@ -818,6 +820,7 @@ rmplot.valmeta <- function(x, ...) {
 #' @param plot_type Character string to specify whether a density plot (\code{"dens"}) or 
 #' histogram (\code{"hist"}) should be displayed.
 #' @param \ldots Additional arguments which are currently not used
+#' @return A \code{ggplot} object.
 #' 
 #' @examples 
 #' \dontrun{

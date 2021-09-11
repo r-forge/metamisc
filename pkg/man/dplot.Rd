@@ -9,6 +9,9 @@ dplot(...)
 \arguments{
 \item{\dots}{Additional arguments, which are currently ignored.}
 }
+\value{
+A \code{ggplot} object.
+}
 \description{
 Generate a plot of the posterior distribution
 }

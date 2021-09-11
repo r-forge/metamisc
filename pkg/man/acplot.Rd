@@ -9,6 +9,9 @@ acplot(...)
 \arguments{
 \item{\dots}{Additional arguments, which are currently ignored.}
 }
+\value{
+A \code{ggplot} object.
+}
 \description{
 Function to display autocorrelation of a fitted Bayesian meta-analysis model.
 }

@@ -4,16 +4,21 @@
 \alias{acplot.mcmc.list}
 \title{Plot the autocorrelation of a Bayesian meta-analysis model}
 \usage{
-\method{acplot}{mcmc.list}(x, P, greek = FALSE, ...)
+\method{acplot}{mcmc.list}(x, P, nLags = 50, greek = FALSE, ...)
 }
 \arguments{
 \item{x}{An object of class \code{"mcmc.list"}}
 
 \item{P}{Optional dataframe describing the parameters to plot and their respective names}
 
+\item{nLags}{Integer indicating the number of lags of the autocorrelation plot.}
+
 \item{greek}{Logical value indicating whether parameter labels have to be parsed to get Greek letters. Defaults to FALSE.}
 
-\item{\ldots}{Additional arguments which are currently not used}
+\item{\ldots}{Additional arguments which are passed to ggs_autocorrelation}
+}
+\value{
+A \code{ggplot} object.
 }
 \description{
 Function to display autocorrelation of a fitted Bayesian meta-analysis model.
