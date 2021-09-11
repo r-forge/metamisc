@@ -1,7 +1,24 @@
+generateMCMCinits <- function(n.chains, model.pars)
+{
+  inits <- list()
+  for (i in 1:n.chains) {
+    inits.i <- list()
+    for (j in 1:length(model.pars)) {
+      parname <- model.pars[[j]]$param
+      fprior <- model.pars[[j]]$param.f
+      fargs <- model.pars[[j]]$param.args
+      inits.i[[parname]] = do.call(fprior, fargs)
+    }
+    inits[[i]] <- inits.i
+  }
+  return(inits)
+}
+
 # Random effects meta-analysis of regression coefficients
 run_Bayesian_REMA <- function(x, pars, n.chains, verbose, 
                               FUN_generate_bugs, # Function to generate BUGS code
                               ...) {
+
   # Identify number of studies
   numstudies = length(x$theta)
   

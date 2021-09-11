@@ -4,7 +4,7 @@
 \alias{acplot.valmeta}
 \title{Plot the autocorrelation of a Bayesian meta-analysis model}
 \usage{
-acplot.valmeta(x, ...)
+\method{acplot}{valmeta}(x, ...)
 }
 \arguments{
 \item{x}{An object of class \code{"valmeta"}}

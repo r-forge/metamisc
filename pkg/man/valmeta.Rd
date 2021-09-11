@@ -162,7 +162,7 @@ entire range of predicted risks). When missing, the total O:E ratio and/or its s
 reported information. See \code{\link{oecalc}} for more information.
 
 For frequentist meta-analysis, within-study variation can either be modeled using a Normal (\code{model.oe = "normal/log"} 
-or \code{model.oe = "normal/identity"}) or a Poisson distribution (\code{model.oe = "normal/log"}). 
+or \code{model.oe = "normal/identity"}) or a Poisson distribution (\code{model.oe = "poisson/log"}). 
 
 When performing a Bayesian meta-analysis, all data are modeled using a one-stage random effects (hierarchical related regression) model.
 In particular, a binomial distribution (if \code{O}, \code{E} and \code{N} is known), a Poisson distribution 

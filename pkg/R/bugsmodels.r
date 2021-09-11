@@ -30,6 +30,12 @@
     out <- paste(out, "  mu.obs <- 1/(1+exp(-mu.tobs))\n", sep = "")
     out <- paste(out, "  pred.obs <- 1/(1+exp(-pred.tobs))\n", sep = "")
     out <- paste(out, "  pred.tobs ~ dnorm(mu.tobs, bsprec)\n", sep = "")
+  } else if (pars$model.cstat == "normal/identity") {
+    out <- paste(out, "  mu.tobs ~ dnorm(", pars$hp.mu.mean, ",", hp.mu.prec, ")\n", sep = "")
+    out <- paste(out, "  prior_mu ~ dnorm(", pars$hp.mu.mean, ",", hp.mu.prec, ")\n", sep = "")
+    out <- paste(out, "  mu.obs <- mu.tobs\n", sep = "")
+    out <- paste(out, "  pred.obs <- pred.tobs\n", sep = "")
+    out <- paste(out, "  pred.tobs ~ dnorm(mu.tobs, bsprec)\n", sep = "")
   } else {
     stop("Specified link function not implemented")
   }

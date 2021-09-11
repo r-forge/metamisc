@@ -152,7 +152,7 @@ run_Bayesian_MA_oe <- function(x, pars, n.chains, verbose, ...) {
 
 
 
-generateHyperparametersMA <- function(x) {
+generateHyperparametersMA <- function(x, ...) {
   # Generate initial values from the relevant distributions
   model.pars <- list()
   model.pars[[1]] <- list(param = "mu.tobs", 
@@ -181,7 +181,6 @@ generateHyperparametersMA <- function(x) {
   }
   model.pars
 }
-
 
 
 restore.c.var.hanley <- function(cstat, N.subjects, N.events, restore.method=4, g=NULL) {

@@ -350,6 +350,32 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 dplot <- function(...)
   UseMethod("dplot")
 
+#' Plot the autocorrelation of a Bayesian meta-analysis model
+#' 
+#' Function to display autocorrelation of a fitted Bayesian meta-analysis model.
+#' 
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' @param \dots Additional arguments, which are currently ignored.
+#' 
+#' @details This is a generic function. 
+#' 
+#' @export dplot
+acplot <- function(...)
+  UseMethod("acplot")
+
+#' Plot the running means of a Bayesian meta-analysis model
+#' 
+#' Function to display running means of a fitted Bayesian meta-analysis model.
+#' 
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' @param \dots Additional arguments, which are currently ignored.
+#' 
+#' @details This is a generic function. 
+#' 
+#' @export dplot
+rmplot <- function(...)
+  UseMethod("rmplot")
+
 
 #' Posterior distribution of estimated model parameters
 #' 

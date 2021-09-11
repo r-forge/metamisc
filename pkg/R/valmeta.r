@@ -82,7 +82,7 @@
 #' reported information. See \code{\link{oecalc}} for more information.
 #' 
 #' For frequentist meta-analysis, within-study variation can either be modeled using a Normal (\code{model.oe = "normal/log"} 
-#' or \code{model.oe = "normal/identity"}) or a Poisson distribution (\code{model.oe = "normal/log"}). 
+#' or \code{model.oe = "normal/identity"}) or a Poisson distribution (\code{model.oe = "poisson/log"}). 
 #' 
 #' When performing a Bayesian meta-analysis, all data are modeled using a one-stage random effects (hierarchical related regression) model.
 #' In particular, a binomial distribution (if \code{O}, \code{E} and \code{N} is known), a Poisson distribution 
@@ -199,6 +199,7 @@
 #' @export
 #' @import metafor
 #' @import mvtnorm
+#' @importFrom dplyr select mutate %>%
 #' @importFrom lme4 glmer
 #' @importFrom stats coef coefficients dnorm glm nobs optim pchisq qnorm qt pt rnorm runif confint poisson
 #' predict vcov as.formula formula model.frame model.frame.default update.formula family
@@ -493,7 +494,8 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
       stop(paste("Meta-analysis model currently not supported: '", out$model, '"', sep = ""))
     }
     
-    ds <- oecalc(OE = OE, OE.se = OE.se,
+    ds <- oecalc(OE = OE, 
+                 OE.se = OE.se,
                  OE.cilb = OE.cilb,
                  OE.ciub = OE.ciub,
                  OE.cilv = OE.cilv,
@@ -510,10 +512,8 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
     ## Assign study labels
     out$slab <- rownames(ds)
     
-    ## Initial guess for number of studies in the meta-analysis
-    out$numstudies <- length(which(rowMeans(!is.na(ds)) == 1))
-    
     if (method != "BAYES") { # Use of rma
+      out$numstudies <- length(which(rowMeans(!is.na(ds)) == 1))
       
       if (pars.default$model.oe == "normal/identity") {
         if (verbose) print("Performing two-stage meta-analysis...")
@@ -536,10 +536,10 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
         out$fit <- fit
         out$numstudies <- fit$k
         
-      } else if (pars.default$model.oe=="normal/log") {
-        if(verbose) print("Performing two-stage meta-analysis...")
-        fit <- rma(yi=ds$theta, sei=ds$theta.se, data=ds, method=method, test=test, slab=out$slab, ...) 
-        preds <- predict(fit, level=pars.default$level)
+      } else if (pars.default$model.oe == "normal/log") {
+        if (verbose) print("Performing two-stage meta-analysis...")
+        fit <- rma(yi = ds$theta, sei = ds$theta.se, data = ds, method = method, test = test, slab = out$slab, ...) 
+        preds <- predict(fit, level = pars.default$level)
         
         # The predict function from metafor uses a Normal distribution for prediction intervals, 
         # Here, we will use a Student T distribution instead
@@ -554,19 +554,32 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
         out$fit <- fit
         
         out$numstudies <- fit$k
-      } else if (pars.default$model.oe=="poisson/log") { 
-        if(verbose) print("Performing one-stage meta-analysis...")
-        if (method=="ML") { 
-          if (test=="knha") warning("The Sidik-Jonkman-Hartung-Knapp correction cannot be applied")
+      } else if (pars.default$model.oe == "poisson/log") { 
+        if (verbose) print("Performing one-stage meta-analysis...")
+        if (method == "ML") { 
+          if (test == "knha") warning("The Sidik-Jonkman-Hartung-Knapp correction cannot be applied")
           ds$Study <- out$slab
           ds$O <- round(ds$O)
-          fit <- glmer(O~1|Study, offset=log(E), family=poisson(link="log"), data=ds)
+          fit <- glmer(O~1|Study, offset = log(E), family = poisson(link="log"), data = ds)
           
-          # Omit 'Study' again from the dataset
-          ds <- ds[,-(colnames(ds)=="Study")]
+          # Extract the random effects
+          theta.ranef <- lme4::ranef(fit, drop = TRUE, condVar = TRUE)
+          ds <- select(ds, -c("Study", "theta", "theta.se","theta.cilb", "theta.ciub"))
           
-          preds.ci <- confint(fit, level=pars.default$level, quiet=!verbose, ...)
-          predint <- calcPredInt(lme4::fixef(fit), sigma2=vcov(fit)[1,1], tau2=(as.data.frame(lme4::VarCorr(fit))["vcov"])[1,1], k=lme4::ngrps(fit), level=pars.default$level)
+          ds <- subset(ds, !is.na(O) & !is.na(E)) %>% 
+            mutate(theta.source = "O and E", 
+                   theta.blup = as.numeric(theta.ranef$Study),
+                   theta.se.blup = sqrt(attr(theta.ranef[[1]], "postVar")))
+          
+          
+          preds.ci <- confint(fit, 
+                              level = pars.default$level, 
+                              quiet = !verbose, ...)
+          predint <- calcPredInt(lme4::fixef(fit), 
+                                 sigma2 = vcov(fit)[1,1], 
+                                 tau2 = (as.data.frame(lme4::VarCorr(fit))["vcov"])[1,1], 
+                                 k = lme4::ngrps(fit), 
+                                 level = pars.default$level)
           
           out$est    <- as.numeric(exp(lme4::fixef(fit)))
           out$ci.lb  <- exp(preds.ci["(Intercept)",1])
@@ -579,6 +592,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
           out$numstudies <- nobs(fit)
         } else if (method == "FE") { #one-stage fixed-effects meta-analysis
           fit <- glm(O~1, offset = log(E), family = poisson(link = "log"), data = ds)
+          
           preds.ci <- confint(fit, level = pars.default$level, quiet = !verbose, ...)
           
           out$est   <- as.numeric(exp(coefficients(fit)))
@@ -617,17 +631,17 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
 #' @export
 print.valmeta <- function(x, ...) {
   text.stat <- attr(x$data,'estimand')
-  text.model <- if (x$method=="FE") "Fixed" else "Random"
-  text.ci <- if(x$method=="BAYES") "credibility" else "confidence"
-  text.pi <- if(x$method=="BAYES") "" else "(approximate)"
+  text.model <- if (x$method == "FE") "Fixed" else "Random"
+  text.ci <- if (x$method == "BAYES") "credibility" else "confidence"
+  text.pi <- if (x$method == "BAYES") "" else "(approximate)"
   
   
-  if (x$method!="FE") {
+  if (x$method != "FE") {
     cat(paste("Summary ", text.stat, " with ", x$level*100, "% ", text.ci, " and ", text.pi, " ", x$level*100, "% prediction interval:\n\n", sep=""))
     results <- c(Estimate=x$est, CIl=x$ci.lb, CIu=x$ci.ub, PIl=x$pi.lb, PIu=x$pi.ub)
   } else {
-    cat(paste("Summary ", text.stat, " with ", x$level*100, "% ", text.ci, " interval:\n\n", sep=""))
-    results <- c(Estimate=x$est, CIl=x$ci.lb, CIu=x$ci.ub)
+    cat(paste("Summary ", text.stat, " with ", x$level*100, "% ", text.ci, " interval:\n\n", sep = ""))
+    results <- c(Estimate = x$est, CIl = x$ci.lb, CIu = x$ci.ub)
   }
   print(results)
   cat("\n")
