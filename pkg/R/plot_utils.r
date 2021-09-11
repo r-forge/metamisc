@@ -359,7 +359,7 @@ dplot <- function(...)
 #' 
 #' @details This is a generic function. 
 #' 
-#' @export dplot
+#' @export acplot
 acplot <- function(...)
   UseMethod("acplot")
 
@@ -372,9 +372,64 @@ acplot <- function(...)
 #' 
 #' @details This is a generic function. 
 #' 
-#' @export dplot
+#' @export rmplot
 rmplot <- function(...)
   UseMethod("rmplot")
+
+#' Plot the autocorrelation of a Bayesian meta-analysis model
+#' 
+#' Function to display autocorrelation of a fitted Bayesian meta-analysis model.
+#' 
+#' @param x An object of class \code{"mcmc.list"}
+#' @param P Optional dataframe describing the parameters to plot and their respective names
+#' @param greek Logical value indicating whether parameter labels have to be parsed to get Greek letters. Defaults to FALSE.
+#' @param \ldots Additional arguments which are currently not used
+#' 
+#' 
+#' @keywords meta-analysis autocorrelation
+#'             
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' 
+#' @export
+acplot.mcmc.list <- function(x, P, greek = FALSE, ...) {
+  requireNamespace("ggmcmc")
+  
+  if (!missing(P)) {
+    S <- ggmcmc::ggs(x, par_labels = P, sort = FALSE)
+    S <- subset(S, S$ParameterOriginal %in% P$Parameter)
+  } else {
+    S <- ggmcmc::ggs(x, sort = FALSE)
+  }
+  
+  ggmcmc::ggs_autocorrelation(S, greek = greek)
+}
+
+
+#' Plot the running means of a Bayesian meta-analysis model
+#' 
+#' Function to display running means of a fitted Bayesian meta-analysis model.
+#' 
+#' @param x An object of class \code{"mcmc.list"}
+#' @param P Optional dataframe describing the parameters to plot and their respective names
+#' @param greek Logical value indicating whether parameter labels have to be parsed to get Greek letters. Defaults to FALSE.
+#' @param \ldots Additional arguments which are currently not used
+#' 
+#'             
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' 
+#' @export
+rmplot.mcmc.list <- function(x, P, greek = FALSE, ...) {
+  requireNamespace("ggmcmc")
+  
+  if (!missing(P)) {
+    S <- ggmcmc::ggs(x, par_labels = P, sort = FALSE)
+    S <- subset(S, S$ParameterOriginal %in% P$Parameter)
+  } else {
+    S <- ggmcmc::ggs(x, sort = FALSE)
+  }
+  
+  ggmcmc::ggs_running(S, greek = greek)
+}
 
 
 #' Posterior distribution of estimated model parameters

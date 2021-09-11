@@ -763,10 +763,8 @@ acplot.valmeta <- function(x, ...) {
     Parameter = c("mu.tobs", "bsTau"),
     Label = c("mu", "tau"))
   
-  S <- ggmcmc::ggs(x$fit$mcmc, par_labels = P, sort = FALSE)
-  S <- subset(S, S$ParameterOriginal %in% P$Parameter)
-  
-  ggmcmc::ggs_autocorrelation(S, greek = TRUE)
+  acplot(x$fit$mcmc, P = P, greek = TRUE, ...)
+
 }
 
 #' Plot the running means of a Bayesian meta-analysis model
@@ -800,18 +798,12 @@ rmplot.valmeta <- function(x, ...) {
   if (!("runjags" %in% class(x$fit))) {
     stop("The object 'x' does not represent a Bayesian analysis!")
   }
-  if (!requireNamespace("ggmcmc", quietly = TRUE)) {
-    stop("The package 'ggmcmc' is currently not installed!")
-  } 
   
   P <- data.frame(
     Parameter = c("mu.tobs", "bsTau"),
     Label = c("mu", "tau"))
   
-  S <- ggmcmc::ggs(x$fit$mcmc, par_labels = P, sort = FALSE)
-  S <- subset(S, S$ParameterOriginal %in% P$Parameter)
-  
-  ggmcmc::ggs_running(S, greek = TRUE)
+  rmplot(x$fit$mcmc, P = P, greek = TRUE, ...)
 }
 
 #' Plot the prior and posterior distribution of a meta-analysis model
