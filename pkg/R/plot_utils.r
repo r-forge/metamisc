@@ -502,6 +502,10 @@ dplot.mcmc.list <- function(x, P, plot_type = "dens", ...) {
 #' 
 #' @param x An mcmc object
 #' @param P Optional dataframe describing the parameters to plot and their respective names
+#' @param confidence The coverage probability of the confidence interval for the potential scale reduction factor
+#' @param max.bins Maximum number of bins, excluding the last one.
+#' @param autoburnin Logical flag indicating whether only the second half of the series should be used in the computation. 
+#' If set to TRUE (default) and start(x) is less than end(x)/2 then start of series will be adjusted so that only second half of series is used.
 #' @param greek Logical value indicating whether parameter labels have to be parsed to get Greek letters. Defaults to false.
 #' @param \ldots Additional arguments which are currently not used
 #' @return A \code{ggplot} object.
@@ -512,13 +516,9 @@ dplot.mcmc.list <- function(x, P, plot_type = "dens", ...) {
 #' @return An object of class \code{ggplot}
 #' 
 #' @export
-gelmanplot.mcmc.list <- function(x, P, greek = FALSE, ...) {
+gelmanplot.mcmc.list <- function(x, P, confidence = 0.95, max.bins = 50, autoburnin = TRUE, greek = FALSE, ...) {
   requireNamespace("coda")
-  
-  max.bins <- 50
-  confidence = 0.95
-  transform = FALSE
-  autoburnin = TRUE
+
   nbin <- min(floor((coda::niter(x) - 50)/coda::thin(x)), max.bins)
   if (nbin < 1) {
     stop("Insufficient iterations to produce Gelman-Rubin plot")
@@ -532,7 +532,7 @@ gelmanplot.mcmc.list <- function(x, P, greek = FALSE, ...) {
   for (i in 1:(nbin + 1)) {
     shrink[i, , ] <- coda::gelman.diag(window(x, end = last.iter[i]), 
                                  confidence = confidence, 
-                                 transform = transform, 
+                                 transform = FALSE, 
                                  autoburnin = autoburnin, 
                                  multivariate = FALSE)$psrf
   }

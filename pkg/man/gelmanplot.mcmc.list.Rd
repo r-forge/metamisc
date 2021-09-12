@@ -4,12 +4,27 @@
 \alias{gelmanplot.mcmc.list}
 \title{Gelman-Rubin-Brooks plot}
 \usage{
-\method{gelmanplot}{mcmc.list}(x, P, greek = FALSE, ...)
+\method{gelmanplot}{mcmc.list}(
+  x,
+  P,
+  confidence = 0.95,
+  max.bins = 50,
+  autoburnin = TRUE,
+  greek = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{An mcmc object}
 
 \item{P}{Optional dataframe describing the parameters to plot and their respective names}
+
+\item{confidence}{The coverage probability of the confidence interval for the potential scale reduction factor}
+
+\item{max.bins}{Maximum number of bins, excluding the last one.}
+
+\item{autoburnin}{Logical flag indicating whether only the second half of the series should be used in the computation. 
+If set to TRUE (default) and start(x) is less than end(x)/2 then start of series will be adjusted so that only second half of series is used.}
 
 \item{greek}{Logical value indicating whether parameter labels have to be parsed to get Greek letters. Defaults to false.}
 

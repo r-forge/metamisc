@@ -506,3 +506,30 @@ rmplot.uvmeta <- function(x, ...) {
   rmplot(x$fit$mcmc, P = P, greek = TRUE, ...)
 }
 
+#' Gelman-Rubin-Brooks plot
+#' 
+#' This plot shows the evolution of Gelman and Rubin's shrink factor as the number of iterations increases. The code is adapted from
+#' the R package coda.
+#' 
+#' @param x An mcmc object
+#' @param confidence The coverage probability of the confidence interval for the potential scale reduction factor
+#' @param \ldots Additional arguments which are currently not used
+#' @return A \code{ggplot} object.
+#' 
+#'             
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' 
+#' @return An object of class \code{ggplot}
+#' 
+#' @export
+gelmanplot.uvmeta <- function(x, confidence = 0.95, ...) {
+  if (!("runjags" %in% class(x$fit))) {
+    stop("The object 'x' does not represent a Bayesian analysis!")
+  }
+  
+  P <- data.frame(
+    Parameter = c("mu.tobs", "bsTau"),
+    Label = c("mu", "tau"))
+  
+  return(gelmanplot(x$fit$mcmc, P = P, confidence = confidence, greek = TRUE, ...))
+}

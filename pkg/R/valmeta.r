@@ -906,6 +906,7 @@ dplot.valmeta <- function(x, par, distr_type, plot_type = "dens", ...) {
 #' the R package coda.
 #' 
 #' @param x An mcmc object
+#' @param confidence The coverage probability of the confidence interval for the potential scale reduction factor
 #' @param \ldots Additional arguments which are currently not used
 #' @return A \code{ggplot} object.
 #' 
@@ -926,7 +927,7 @@ dplot.valmeta <- function(x, par, distr_type, plot_type = "dens", ...) {
 #' @return An object of class \code{ggplot}
 #' 
 #' @export
-gelmanplot.valmeta <- function(x, ...) {
+gelmanplot.valmeta <- function(x, confidence = 0.95, ...) {
   if (!("runjags" %in% class(x$fit))) {
     stop("The object 'x' does not represent a Bayesian analysis!")
   }
@@ -935,5 +936,5 @@ gelmanplot.valmeta <- function(x, ...) {
     Parameter = c("mu.tobs", "bsTau"),
     Label = c("mu", "tau"))
   
-  gelmanplot(x$fit$mcmc, P = P, greek = TRUE, ...)
+  return(gelmanplot(x$fit$mcmc, P = P, confidence = confidence, greek = TRUE, ...))
 }
