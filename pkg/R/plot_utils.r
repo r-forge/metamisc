@@ -178,7 +178,7 @@ forest.default <- function(theta,
   
   # Information for secondary axis
   labels_axis2 <- paste(format(ALL$mean, digits = study.digits, nsmall=2), " [", 
-                        format(ALL$m.lower, digits = study.digits, nsmall=2), " - ", 
+                        format(ALL$m.lower, digits = study.digits, nsmall=2), " ; ", 
                         format(ALL$m.upper, digits = study.digits, nsmall=2), "]", sep = "")
   
   
@@ -351,6 +351,22 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 dplot <- function(...)
   UseMethod("dplot")
 
+#' Gelman-Rubin-Brooks plot
+#' 
+#' This plot shows the evolution of Gelman and Rubin's shrink factor as the number of iterations increases. The code is adapted from
+#' the R package coda.
+#' 
+#' @param \ldots Additional arguments which are currently not used
+#' @return A \code{ggplot} object.
+#' 
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' 
+#' @return An object of class \code{ggplot}
+#' 
+#' @export gelmanplot
+gelmanplot <- function(...) 
+  UseMethod("gelmanplot")
+
 #' Plot the autocorrelation of a Bayesian meta-analysis model
 #' 
 #' Function to display autocorrelation of a fitted Bayesian meta-analysis model.
@@ -405,7 +421,10 @@ acplot.mcmc.list <- function(x, P, nLags = 50, greek = FALSE, ...) {
   } else {
     D <- ggmcmc::ggs(x, sort = FALSE)
   }
-  ggmcmc::ggs_autocorrelation(D = D, nLags = nLags, greek = greek, ...)
+  g <- ggmcmc::ggs_autocorrelation(D = D, nLags = nLags, greek = greek, ...)
+  g <- g + theme(strip.text.y = element_text(angle = 0))
+  
+  return(g)
 }
 
 
@@ -433,7 +452,10 @@ rmplot.mcmc.list <- function(x, P, greek = FALSE, ...) {
     D <- ggmcmc::ggs(x, sort = FALSE)
   }
   
-  ggmcmc::ggs_running(D = D, greek = greek, ...)
+  g <- ggmcmc::ggs_running(D = D, greek = greek, ...)
+  g <- g + theme(strip.text.y = element_text(angle = 0))
+  
+  return(g)
 }
 
 
@@ -471,4 +493,88 @@ dplot.mcmc.list <- function(x, P, plot_type = "dens", ...) {
   } else {
     stop("Invalid plot type")
   }
+}
+
+#' Gelman-Rubin-Brooks plot
+#' 
+#' This plot shows the evolution of Gelman and Rubin's shrink factor as the number of iterations increases. The code is adapted from
+#' the R package coda.
+#' 
+#' @param x An mcmc object
+#' @param P Optional dataframe describing the parameters to plot and their respective names
+#' @param greek Logical value indicating whether parameter labels have to be parsed to get Greek letters. Defaults to false.
+#' @param \ldots Additional arguments which are currently not used
+#' @return A \code{ggplot} object.
+#' 
+#'             
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' 
+#' @return An object of class \code{ggplot}
+#' 
+#' @export
+gelmanplot.mcmc.list <- function(x, P, greek = FALSE, ...) {
+  requireNamespace("coda")
+  
+  max.bins <- 50
+  confidence = 0.95
+  transform = FALSE
+  autoburnin = TRUE
+  nbin <- min(floor((coda::niter(x) - 50)/coda::thin(x)), max.bins)
+  if (nbin < 1) {
+    stop("Insufficient iterations to produce Gelman-Rubin plot")
+  }
+  binw <- floor((coda::niter(x) - 50)/nbin)
+  last.iter <- c(seq(from = start(x) + 50 * coda::thin(x), by = binw * 
+                       coda::thin(x), length = nbin), end(x))
+  shrink <- array(dim = c(nbin + 1, coda::nvar(x), 2))
+  dimnames(shrink) <- list(last.iter, coda::varnames(x), 
+                           c("median", paste(50 * (confidence + 1), "%", sep = "")))
+  for (i in 1:(nbin + 1)) {
+    shrink[i, , ] <- coda::gelman.diag(window(x, end = last.iter[i]), 
+                                 confidence = confidence, 
+                                 transform = transform, 
+                                 autoburnin = autoburnin, 
+                                 multivariate = FALSE)$psrf
+  }
+  all.na <- apply(is.na(shrink[, , 1, drop = FALSE]), 2, all)
+  if (any(all.na)) {
+    cat("\n******* Error: *******\n")
+    cat("Cannot compute Gelman & Rubin's diagnostic for any chain \n")
+    cat("segments for variables", coda::varnames(x)[all.na], "\n")
+    cat("This indicates convergence failure\n")
+  }
+  
+  labels_gelmandiag <- names(shrink[1,1,])
+  ggdatMed <- data.frame(cbind(shrinkfactor = as.vector(shrink[,,labels_gelmandiag[1]]), 
+                               parameter = rep(colnames(shrink[,,1]), each = nrow(shrink[,,1])),
+                               type = labels_gelmandiag[1], 
+                               last.iter = rep(last.iter, ncol(shrink[,,1]))))
+  ggdatBnd <- data.frame(cbind(shrinkfactor = as.vector(shrink[,,labels_gelmandiag[2]]), 
+                               parameter = rep(colnames(shrink[,,2]), each = nrow(shrink[,,2])),
+                               type = labels_gelmandiag[2], 
+                               last.iter = rep(last.iter, ncol(shrink[,,2]))))
+  ggdat <- rbind(ggdatMed, ggdatBnd)
+  ggdat$last.iter <- as.numeric(as.character(ggdat$last.iter))
+  ggdat$shrinkfactor <- as.numeric(as.character(ggdat$shrinkfactor))
+  
+  if (!missing(P)) {
+    ggdat <- subset(ggdat, ggdat$parameter %in% P$Parameter)
+    ggdat$parameter <- factor(ggdat$parameter, levels = P$Parameter, labels = P$Label)
+  }
+  
+  
+  if (greek) {
+    g <- with(ggdat, ggplot(ggdat, aes(last.iter, shrinkfactor, color = type)) +
+                geom_line() + facet_wrap(~ parameter, labeller = label_parsed) + 
+                xlab("Last iteration in chain") +
+                ylab("Shrink factor"))
+  } else {
+    g <- with(ggdat, ggplot(ggdat, aes(last.iter, shrinkfactor, color = type)) +
+                geom_line() + facet_wrap(~ parameter) + 
+                xlab("Last iteration in chain") +
+                ylab("Shrink factor"))
+  }
+  
+  
+  return(g)
 }

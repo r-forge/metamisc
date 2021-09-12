@@ -91,16 +91,16 @@
 #' }
 #' 
 #' \subsection{Bayesian meta-analysis}{
-#' All Bayesian meta-analysis models assume random effects by default. Results are based on the posterior median. 
+#' All Bayesian meta-analysis models assume the presence of random effects. Summary estimates are based on the posterior mean. 
 #' Credibility and prediction intervals are directly obtained from the corresponding posterior quantiles.
 #' 
-#' The prior distribution for the (transformed) summary estimate is always modeled using a Normal distribution, 
-#' with mean \code{hp.mu.mean} (defaults to 0) and variance 
-#' \code{hp.mu.var} (defaults to 1000). For meta-analysis of the total O:E ratio, the maximum value for \code{hp.mu.var} is 100.
+#' The prior distribution for the (transformed) performance estimate is modeled using a Normal distribution, 
+#' with mean \code{hp.mu.mean} (defaults to 0) and variance \code{hp.mu.var} (defaults to 1000). 
+#' For meta-analysis of the total O:E ratio, the maximum value for \code{hp.mu.var} is 100.
 #' 
 #' By default, the prior distribution for the between-study standard deviation is modeled using a uniform distribution 
-#' (\code{hp.tau.dist="dunif"}), with boundaries \code{hp.tau.min} and \code{hp.tau.max}. Alternatively, it is possible
-#' to specify a truncated Student-t distribution (\code{hp.tau.dist="dhalft"}) with a mean of \code{hp.tau.mean}, 
+#' (\code{hp.tau.dist="dunif"}), with boundaries \code{hp.tau.min} and \code{hp.tau.max}. Alternative choices are a 
+#' truncated Student-t distribution (\code{hp.tau.dist="dhalft"}) with a mean of \code{hp.tau.mean}, 
 #' a standard deviation of \code{hp.tau.sigma} and \code{hp.tau.df} degrees of freedom. This distribution is again 
 #' restricted to the range \code{hp.tau.min} to \code{hp.tau.max}.
 #' }
@@ -156,7 +156,7 @@
 #' valmeta(cstat=c.index,  N=n, O=n.events, slab=Study, data=EuroSCORE)
 #' 
 #' # Two-stage meta-analysis of the total O:E ratio (random effects)
-#' valmeta(measure="OE", O=n.events, E=e.events, N=n, data=EuroSCORE)    
+#' valmeta(measure="OE", O=n.events, E=e.events, N=n, slab=Study, data=EuroSCORE)    
 #' valmeta(measure="OE", O=n.events, E=e.events, data=EuroSCORE)       
 #' valmeta(measure="OE", Po=Po, Pe=Pe, N=n, data=EuroSCORE)
 #' 
@@ -461,21 +461,19 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
       }
       
       out$fit <- fit
-      
       out$numstudies <- fit$k
+      out$data <- ds
     } else {
-      bayesma <- run_Bayesian_REMA(list(theta = ds$theta,
-                                        theta.var = ds$theta.se**2,
-                                        Nstudies = length(ds$theta)), 
-                                   pars = pars.default, 
-                                   FUN_generate_bugs = .generateBugsCstat,
-                                   n.chains = n.chains, 
-                                   verbose = verbose, ...) 
-      out <- c(out, bayesma)
-      class(out) <- "valmeta"
+      return(run_Bayesian_REMA(call = match.call(),
+                               measure = measure,
+                               method = method,
+                               data = ds, 
+                               pars = pars.default, 
+                               FUN_generate_bugs = .generateBugsCstat,
+                               n.chains = n.chains, 
+                               verbose = verbose, ...))
     }
     
-    out$data <- ds
     return(out)
   }
   #######################################################################################
@@ -484,14 +482,13 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
   if (measure == "OE") {
     if (verbose) message("Extracting/computing estimates of the total O:E ratio ...")
     
-    out$model <- pars.default$model.oe
-    
-    if (out$model == "normal/identity") {
+
+    if (pars.default$model.oe == "normal/identity") {
       g <- NULL
-    } else if (out$model == "normal/log" |  out$model == "poisson/log") {
+    } else if (pars.default$model.oe == "normal/log" |  pars.default$model.oe == "poisson/log") {
       g <- "log(OE)"
     } else {
-      stop(paste("Meta-analysis model currently not supported: '", out$model, '"', sep = ""))
+      stop(paste("Meta-analysis model currently not supported: '", pars.default$model.oe, '"', sep = ""))
     }
     
     ds <- oecalc(OE = OE, 
@@ -507,17 +504,31 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
                  Po = Po,
                  Po.se = Po.se,
                  Pe = Pe, 
-                 slab = slab, g = g, level = pars.default$level) 
+                 slab = slab, 
+                 g = g,
+                 level = pars.default$level) 
     
-    ## Assign study labels
-    out$slab <- rownames(ds)
+    
+    if (method == "BAYES") {
+      if (verbose) print("Performing Bayesian one-stage meta-analysis...")
+      return(run_Bayesian_MA_oe(call = match.call(),
+                                measure = measure,
+                                method = method,
+                                data = ds, 
+                                pars = pars.default, 
+                                n.chains = n.chains, 
+                                verbose = verbose, ...))
+
+    }
     
     if (method != "BAYES") { # Use of rma
-      out$numstudies <- length(which(rowMeans(!is.na(ds)) == 1))
+      ## Assign study labels
+      out$slab <- rownames(ds)
+      out$model <- pars.default$model.oe
       
       if (pars.default$model.oe == "normal/identity") {
-        if (verbose) print("Performing two-stage meta-analysis...")
-        fit <- rma(yi = ds$theta, sei = ds$theta.se, data = ds, method = method, test = test, slab = out$slab, ...) 
+        if (verbose) print("Performing a frequentist two-stage meta-analysis...")
+        fit <- metafor::rma(yi = ds$theta, sei = ds$theta.se, data = ds, method = method, test = test, slab = out$slab, ...) 
         preds <- predict(fit, level = pars.default$level)
         
         # The predict function from metafor uses a Normal distribution for prediction intervals, 
@@ -538,7 +549,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
         
       } else if (pars.default$model.oe == "normal/log") {
         if (verbose) print("Performing two-stage meta-analysis...")
-        fit <- rma(yi = ds$theta, sei = ds$theta.se, data = ds, method = method, test = test, slab = out$slab, ...) 
+        fit <- metafor::rma(yi = ds$theta, sei = ds$theta.se, data = ds, method = method, test = test, slab = out$slab, ...) 
         preds <- predict(fit, level = pars.default$level)
         
         # The predict function from metafor uses a Normal distribution for prediction intervals, 
@@ -560,17 +571,15 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
           if (test == "knha") warning("The Sidik-Jonkman-Hartung-Knapp correction cannot be applied")
           ds$Study <- out$slab
           ds$O <- round(ds$O)
-          fit <- glmer(O~1|Study, offset = log(E), family = poisson(link="log"), data = ds)
+          fit <- lme4::glmer(O~1|Study, offset = log(E), family = poisson(link="log"), data = ds)
           
           # Extract the random effects
           theta.ranef <- lme4::ranef(fit, drop = TRUE, condVar = TRUE)
-          ds <- select(ds, -c("Study", "theta", "theta.se","theta.cilb", "theta.ciub"))
+          #ds <- select(ds, -c("Study", "theta", "theta.se","theta.cilb", "theta.ciub"))
           
           ds <- subset(ds, !is.na(O) & !is.na(E)) %>% 
-            mutate(theta.source = "O and E", 
-                   theta.blup = as.numeric(theta.ranef$Study),
+            mutate(theta.blup = as.numeric(theta.ranef$Study),
                    theta.se.blup = sqrt(attr(theta.ranef[[1]], "postVar")))
-          
           
           preds.ci <- confint(fit, 
                               level = pars.default$level, 
@@ -588,7 +597,6 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
           out$pi.ub  <- exp(predint$upper)
           
           out$fit <- fit
-          
           out$numstudies <- nobs(fit)
         } else if (method == "FE") { #one-stage fixed-effects meta-analysis
           fit <- glm(O~1, offset = log(E), family = poisson(link = "log"), data = ds)
@@ -600,7 +608,6 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
           out$ci.ub <- out$pi.ub <- exp(preds.ci[2])
           
           out$fit <- fit
-          
           out$numstudies <- nobs(fit)
         } else {
           stop(paste("No implementation found for ", method, " estimation (model '", pars.default$model.oe, "')!", sep = ""))
@@ -608,12 +615,7 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
       } else {
         stop("Model not implemented yet!")
       }
-    } else {
-      if (verbose) print("Performing Bayesian one-stage meta-analysis...")
-      bayesma <- run_Bayesian_MA_oe(ds, pars = pars.default, n.chains = n.chains, verbose = verbose, ...)
-      out <- c(out, bayesma)
-      class(out) <- "valmeta"
-    }
+    } 
     
     if ("Study" %in% colnames(ds)) {
       ds <- ds[,-which(colnames(ds) == "Study")]
@@ -689,7 +691,12 @@ print.valmeta <- function(x, ...) {
 #' @method plot valmeta
 #' @export
 plot.valmeta <- function(x,  ...) {
-  yi.slab <- c(as.character(x$slab))
+  if (is.null(x$slab)) {
+    yi.slab <- rownames(x$data)
+  } else {
+    yi.slab <- c(as.character(x$slab))
+  }
+  
   yi <- c(x$data[,"theta"])
   ci.lb <- c(x$data[,"theta.cilb"])
   ci.ub <- c(x$data[,"theta.ciub"])
@@ -892,3 +899,41 @@ dplot.valmeta <- function(x, par, distr_type, plot_type = "dens", ...) {
   dplot(x$fit$mcmc, P = P, plot_type = plot_type, ...)
 }
 
+
+#' Gelman-Rubin-Brooks plot
+#' 
+#' This plot shows the evolution of Gelman and Rubin's shrink factor as the number of iterations increases. The code is adapted from
+#' the R package coda.
+#' 
+#' @param x An mcmc object
+#' @param \ldots Additional arguments which are currently not used
+#' @return A \code{ggplot} object.
+#' 
+#' @examples 
+#' \dontrun{
+#' data(EuroSCORE)
+#' 
+#' # Meta-analysis of the concordance statistic
+#' fit <- valmeta(cstat=c.index, cstat.se=se.c.index, cstat.cilb=c.index.95CIl,
+#'                cstat.ciub=c.index.95CIu, N=n, O=n.events, 
+#'                data=EuroSCORE, method="BAYES", slab=Study)
+#' gelmanplot(fit)
+#' } 
+#' 
+#'             
+#' @author Thomas Debray <thomas.debray@gmail.com>
+#' 
+#' @return An object of class \code{ggplot}
+#' 
+#' @export
+gelmanplot.valmeta <- function(x, ...) {
+  if (!("runjags" %in% class(x$fit))) {
+    stop("The object 'x' does not represent a Bayesian analysis!")
+  }
+  
+  P <- data.frame(
+    Parameter = c("mu.tobs", "bsTau"),
+    Label = c("mu", "tau"))
+  
+  gelmanplot(x$fit$mcmc, P = P, greek = TRUE, ...)
+}

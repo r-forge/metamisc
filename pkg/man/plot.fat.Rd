@@ -58,12 +58,6 @@ plot(fat(b=b, b.se=b.se), xlab = "Log hazard ratio")
 # Plot the funnel for an alternative test
 plot(fat(b=b, b.se=b.se, n.total=n.total, method="M-FIV"), xlab = "Log hazard ratio")
 
-# Funnel plot asymettry test for O:E ratio
-data(EuroSCORE)
-fit <- valmeta(measure = "OE", O = n.events, E = e.events, 
-               data = EuroSCORE, method = "ML", 
-               pars = list(model.oe = "poisson/log"))
-plot(fat(b = fit$data$theta.blup, b.se = fit$data$theta.se.blup))
 
 }
 \author{
