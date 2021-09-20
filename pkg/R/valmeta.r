@@ -577,9 +577,10 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
           theta.ranef <- lme4::ranef(fit, drop = TRUE, condVar = TRUE)
           #ds <- select(ds, -c("Study", "theta", "theta.se","theta.cilb", "theta.ciub"))
           
-          ds <- subset(ds, !is.na(O) & !is.na(E)) %>% 
-            mutate(theta.blup = as.numeric(theta.ranef$Study),
-                   theta.se.blup = sqrt(attr(theta.ranef[[1]], "postVar")))
+          ia <- which(!is.na(ds$O) & !is.na(ds$E))
+          ds$theta.blup <- ds$theta.se.blup <- NA
+          ds$theta.blup[ia] <- as.numeric(theta.ranef$Study)
+          ds$theta.se.blup[ia] <- sqrt(attr(theta.ranef[[1]], "postVar"))
           
           preds.ci <- confint(fit, 
                               level = pars.default$level, 
@@ -616,10 +617,6 @@ valmeta <- function(measure="cstat", cstat, cstat.se, cstat.cilb, cstat.ciub, cs
         stop("Model not implemented yet!")
       }
     } 
-    
-    if ("Study" %in% colnames(ds)) {
-      ds <- ds[,-which(colnames(ds) == "Study")]
-    }
     
     out$data <- ds
     

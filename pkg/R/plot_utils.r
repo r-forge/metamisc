@@ -106,19 +106,15 @@ forest.default <- function(theta,
   if (missing(theta.slab)) {
     if (!is.null(attr(theta, "slab"))) {
       slab <- attr(theta, "slab")
-    }
-    else {
+    } else {
       slab <- paste("Study", seq_len(k))
     }
-  }
-  else {
+  } else {
     if (length(theta.slab) == 1 && is.na(theta.slab)) 
       slab <- rep("", k)
     else
       slab <- theta.slab
   }
-  
-  
   
   add.predint <- TRUE # Add prediction interval by default
   if (missing(theta.summary.pi.lb) | missing(theta.summary.pi.ub)) {
@@ -129,14 +125,12 @@ forest.default <- function(theta,
   }
   
   # Determine ordering
+  i.index <- 1:length(yi)
   if (sort == "asc") {
     i.index <- order(yi, decreasing = FALSE)
   } else if (sort == "desc") {
     i.index <- order(yi, decreasing = TRUE)
-  } else {
-    i.index <- 1:length(yi)
   }
-  
   
   # Order the study results
   scat  <- rep(1, num.studies) #indicator variable for data points

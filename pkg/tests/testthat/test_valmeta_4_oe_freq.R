@@ -146,3 +146,19 @@ test_that("Generating a plot", {
 
 })
 
+test_that("Test storage of results", {
+  
+  # Valmeta using cstat, se.cstat, N, and O
+  fit1 <- valmeta(measure = "OE", N=n, O=n.events, E =  e.events,
+                 slab=Study, data=EuroSCORE,
+                 method     = "ML",
+                 pars       = list(model.oe = "poisson/log"))
+  
+  expect_true("data.frame" %in% class(fit1$data))
+  expect_true(all(c("theta", "theta.se", "theta.cilb", "theta.ciub") %in% colnames(fit1$data)))
+  
+})
+
+
+
+

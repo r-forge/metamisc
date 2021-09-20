@@ -2,7 +2,6 @@ context("valmeta 2. frequentist meta-analysis of c-statistic")
 skip_on_cran()
 
 library(dplyr)
-library(metafor)
 data(EuroSCORE)
 
 
@@ -52,6 +51,25 @@ test_that("Test whether Using the data argument yields the same results", {
   
 })
 
+test_that("Test storage of results", {
+  
+  # Valmeta using cstat, se.cstat, N, and O
+  fit1 <- valmeta(measure="cstat", cstat=c.index, cstat.se=se.c.index, N=n, O=n.events, slab=Study, data=EuroSCORE)
+  
+  expect_true("data.frame" %in% class(fit1$data))
+  expect_true(all(c("theta", "theta.se", "theta.cilb", "theta.ciub") %in% colnames(fit1$data)))
+  
+  pars <- list(model.cstat = "normal/identity")
+  
+  fit2 <- valmeta(cstat = c.index, cstat.se = se.c.index, cstat.cilb = c.index.95CIl,
+                 cstat.ciub = c.index.95CIu, cstat.cilv = 0.95, N = n, O = n.events, 
+                 data = EuroSCORE, slab = Study, pars = pars)
+  
+  expect_true("data.frame" %in% class(fit2$data))
+  expect_true(all(c("theta", "theta.se", "theta.cilb", "theta.ciub") %in% colnames(fit2$data)))
+  
+  
+})
 
 
 # Nearly identical results when we need to estimate the SE
