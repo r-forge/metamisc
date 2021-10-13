@@ -57,8 +57,10 @@
 #' \code{hp.tau.dist} (prior distribution for the between-study standard-deviation. Defaults to \code{"dunif"}), 
 #' \code{hp.tau.df} (degrees of freedom for the prior distribution for the between-study standard-deviation. 
 #' Defaults to 3). Other arguments are \code{method.restore.c.se} (method for restoring missing estimates for the standard error 
-#' of the c-statistic. See \code{\link{ccalc}} for more information), \code{model.cstat} (The likelihood/link for modeling 
-#' the c-statistic; see "Details"), \code{model.oe} (The likelihood/link for modeling the O:E ratio; see "Details")
+#' of the c-statistic. See \code{\link{ccalc}} for more information), 
+#' \code{model.cstat} (The likelihood/link for modeling the c-statistic; see "Details"), 
+#' \code{model.oe} (The likelihood/link for modeling the O:E ratio; see "Details"),
+#' \code{seed} (an integer to indicate the random seed).
 #' @param \ldots Additional arguments that are passed to \pkg{rma} or \pkg{runjags} (if \code{method="BAYES"}).
 #' 
 #' @details 
@@ -124,19 +126,19 @@
 ##' }
 #' @references 
 #' Debray TPA, Damen JAAG, Snell KIE, Ensor J, Hooft L, Reitsma JB, et al. A guide to systematic review and meta-analysis 
-#' of prediction model performance. \emph{BMJ}. 2017;356:i6460.
+#' of prediction model performance. \emph{BMJ}. 2017;\bold{356}:i6460. \doi{10.1136/bmj.i6460}
 #' 
 #' Debray TPA, Damen JAAG, Riley R, Snell KIE, Reitsma JB, Hooft L, et al. A framework for meta-analysis of prediction model 
-#' studies with binary and time-to-event outcomes. \emph{Stat Methods Med Res}. 2019 Sep;28(9):2768--86. 
+#' studies with binary and time-to-event outcomes. \emph{Stat Methods Med Res}. 2019;\bold{28}:2768--86. \doi{10.1177/0962280218785504}
 #' 
 #' Riley RD, Tierney JF, Stewart LA. Individual participant data meta-analysis: a handbook for healthcare research. Hoboken, NJ: Wiley; 2021. 
 #' ISBN: 978-1-119-33372-2.
 #' 
 #' Steyerberg EW, Nieboer D, Debray TPA, van Houwelingen HC. Assessment of heterogeneity in an individual participant
-#' data meta-analysis of prediction models: An overview and illustration. \emph{Stat Med}. 2019; In press.
+#' data meta-analysis of prediction models: An overview and illustration. \emph{Stat Med}. 2019;\bold{38}:4290--309. \doi{10.1002/sim.8296}
 #' 
 #' Viechtbauer W. Conducting Meta-Analyses in R with the metafor Package. \emph{Journal of Statistical Software}. 
-#' 2010; 36(3). Available from: \url{https://www.jstatsoft.org/v36/i03/}
+#' 2010; \bold{36}. \doi{10.18637/jss.v036.i03}
 #'   
 #' @seealso \code{\link{ccalc}} to calculate concordance statistics and corresponding standard errors, \code{\link{oecalc}} to 
 #' calculate the total O:E ratio and corresponding standard errors, 
@@ -179,7 +181,8 @@
 #' pars <- list(hp.tau.dist="dhalft",   # Prior for the between-study standard deviation
 #'              hp.tau.sigma=1.5,       # Standard deviation for 'hp.tau.dist'
 #'              hp.tau.df=3,            # Degrees of freedom for 'hp.tau.dist'
-#'              hp.tau.max=10)          # Maximum value for the between-study standard deviation
+#'              hp.tau.max=10,          # Maximum value for the between-study standard deviation
+#'              seed=5)                 # Set random seed for the simulations
 #' fit3 <- valmeta(measure="OE", O=n.events, E=e.events, N=n, data=EuroSCORE.new,
 #'         method="BAYES", slab=Study, pars=pars)
 #' plot(fit3)
