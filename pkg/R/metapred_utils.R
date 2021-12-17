@@ -448,3 +448,16 @@ get.function <- function(x, ...) {
   else
     return(get(as.character(x), mode = "function"))
 }
+
+# Convert factor to binary
+# In case the factor has more than 2 levels, by default the same occurs as in 
+# glm: the first level is assumed to be the failure, and all others successes.
+factor_as_binary <- function(x, failure_level = 1) {
+  if (!is.factor(x)) stop(paste0("x must be a factor, x was ", class(x)))
+  y <- rep(1, length(x))
+  y[x == levels(x)[failure_level]] <- 0
+  y[is.na(x)] <- NA
+  y
+}
+
+
